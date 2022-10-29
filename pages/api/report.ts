@@ -23,8 +23,7 @@ export default async function handler(
 			}
 		});
 
-		const reports = await prisma.report.findMany();
-		console.log(reports);
+		await prisma.$disconnect();
 	}
 	res.status(200).json({ name: 'John Doe' });
 }
