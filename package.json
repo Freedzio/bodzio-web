@@ -7,7 +7,7 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"heroku-postbuild": "export NODE_OPTIONS= && yarn build && yarn hasura:migrate:apply --endpoint=$HASURA_APP && yarn hasura:metadata:apply --endpoint=$HASURA_APP",
+		"heroku-postbuild": "export NODE_OPTIONS= && yarn build && yarn hasura:migrate:apply --endpoint=$HASURA_APP --admin-secret=$ADMIN_SECRET && yarn hasura:metadata:apply --endpoint=$HASURA_APP --admin-secret=$ADMIN_SECRET",
 		"hasura": "./node_modules/.bin/hasura --project=./hasura",
 		"hasura:migrate:apply": "yarn hasura migrate apply --all-databases",
 		"hasura:metadata:apply": "yarn hasura metadata apply"
