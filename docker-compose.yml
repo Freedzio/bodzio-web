@@ -27,6 +27,18 @@ services:
       ## uncomment next line to run console offline (i.e load console assets from server instead of CDN)
       # HASURA_GRAPHQL_CONSOLE_ASSETS_DIR: /srv/console-assets
       ## uncomment next line to set an admin secret
-      # HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+      HASURA_GRAPHQL_ADMIN_SECRET: myadminsecretkey
+
+      # UNAUTHORIZED_ROLE
+      HASURA_GRAPHQL_UNAUTHORIZED_ROLE: anonymous
+      # ENABLE CORS
+      HASURA_GRAPHQL_CORS_DOMAIN: '*'
+      #JWT SECRET
+      HASURA_GRAPHQL_JWT_SECRET: '{"type":"HS256", "key": "3EK6FD+o0+c7tzBNVfjpMkNDi2yARAAKzQlk8O2IKoxQu4nF7EdAh8s3TwpHwrdWT6R", "allowed_skew": 3600}'
+
+      # ACTION BASE ENDPOINT FOR ACTIONS AND EVENTS
+      ACTION_BASE_URL: http://host.docker.internal:3000/api
+
+      HASURA_SECRET: 07925cb49ec14f329aa8e45da6468f78
 volumes:
   db_data:
