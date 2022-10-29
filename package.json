@@ -1,24 +1,29 @@
 {
-  "name": "bodzio-web",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "next lint"
-  },
-  "dependencies": {
-    "next": "13.0.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
-  },
-  "devDependencies": {
-    "@types/node": "18.11.7",
-    "@types/react": "18.0.24",
-    "@types/react-dom": "18.0.8",
-    "eslint": "8.26.0",
-    "eslint-config-next": "13.0.0",
-    "typescript": "4.8.4"
-  }
+	"name": "bodzio-web",
+	"version": "0.1.0",
+	"private": true,
+	"scripts": {
+		"dev": "next dev",
+		"build": "next build",
+		"start": "next start",
+		"lint": "next lint",
+		"heroku-postbuild": "export NODE_OPTIONS= && yarn build && yarn hasura:migrate:apply --endpoint=$HASURA_APP && yarn hasura:metadata:apply --endpoint=$HASURA_APP",
+		"hasura": "./node_modules/.bin/hasura --project=./hasura",
+		"hasura:migrate:apply": "yarn hasura migrate apply --all-databases",
+		"hasura:metadata:apply": "yarn hasura metadata apply"
+	},
+	"dependencies": {
+		"next": "13.0.0",
+		"react": "18.2.0",
+		"react-dom": "18.2.0"
+	},
+	"devDependencies": {
+		"@types/node": "18.11.7",
+		"@types/react": "18.0.24",
+		"@types/react-dom": "18.0.8",
+		"eslint": "8.26.0",
+		"eslint-config-next": "13.0.0",
+		"hasura-cli": "^2.13.0",
+		"typescript": "4.8.4"
+	}
 }
