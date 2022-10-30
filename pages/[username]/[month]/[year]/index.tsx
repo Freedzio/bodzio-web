@@ -11,6 +11,7 @@ export const getServerSideProps = async (context: NextPageContext) => {
 	const prisma = new PrismaClient();
 
 	await prisma.$connect();
+
 	const reports = await prisma.report.findMany({
 		where: {
 			username: {
@@ -18,15 +19,15 @@ export const getServerSideProps = async (context: NextPageContext) => {
 			},
 			created_at: {
 				gte: dayjs()
-					.set('month', 9)
+					.set('month', parseInt(month as string))
 					.set('year', parseInt(year as string))
 					.startOf('month')
-					.toDate(),
+					.toISOString(),
 				lte: dayjs()
-					.set('month', 9)
+					.set('month', parseInt(month as string))
 					.set('year', parseInt(year as string))
 					.endOf('month')
-					.toDate()
+					.toISOString()
 			}
 		}
 	});
