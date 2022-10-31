@@ -9,7 +9,6 @@ import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tooltip } from 'primereact/tooltip';
 import { Dayjs } from 'dayjs';
-import { Card } from 'primereact/card';
 import classNames from 'classnames';
 
 type NiceReport = {
@@ -206,6 +205,10 @@ const dateBodyTemplate = (report: NiceReport) => {
 	return `${weekDays[date.isoWeekday()]}, ${date.format('DD MMM')}`;
 };
 
+const jobBodyTemplate = (report: NiceReport) => {
+	return report.job.replaceAll('*', '\n*').replaceAll('-', '\n-');
+};
+
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.created_at;
@@ -268,7 +271,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const isQuotaMet = workedHours > hoursToWork;
 
 	return (
-		<div className='px-8'>
+		<div className='px-8 pb-8'>
 			<div className='pt-5' style={{ fontSize: '26px' }}>
 				Raport <strong>{username}</strong> za okres{' '}
 				<strong>
@@ -309,7 +312,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					body={dateBodyTemplate}
 					sortable
 				/>
-				<Column field='job' header='Zakres' />
+				<Column field='job' body={jobBodyTemplate} header='Zakres' />
 				<Column
 					field='hours'
 					header='Czas'

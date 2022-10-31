@@ -2,14 +2,14 @@
 import { PrismaClient } from '@prisma/client';
 import type { NextApiRequest, NextApiResponse } from 'next';
 
-type Data = {
-	name: string;
-};
-
 export default async function handler(
 	req: NextApiRequest,
-	res: NextApiResponse<Data>
+	res: NextApiResponse
 ) {
+	if (req.headers['x-bodzio-secret'] !== process.env.BODZIO_SECRET) {
+		res.status(403).send({});
+	}
+
 	if (req.method === 'POST') {
 		const { username, job, hours } = JSON.parse(req.body);
 		const prisma = new PrismaClient();
@@ -19,11 +19,11 @@ export default async function handler(
 			data: {
 				username,
 				job,
-				hours
+				hours: parseFloat(hours)
 			}
 		});
 
 		await prisma.$disconnect();
 	}
-	res.status(200).json({ name: 'John Doe' });
+	res.status(200).json({});
 }
