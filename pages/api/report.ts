@@ -1,6 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import { PrismaClient } from '@prisma/client';
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextApiRequest, NextApiResponse } from 'next';
+import { v4 as uuid } from 'uuid';
 
 export default async function handler(
 	req: NextApiRequest,
@@ -11,7 +12,7 @@ export default async function handler(
 	}
 
 	if (req.method === 'POST') {
-		const { username, job, hours } = JSON.parse(req.body);
+		const { username, job, hours, messageId } = JSON.parse(req.body);
 		const prisma = new PrismaClient();
 
 		await prisma.$connect();
@@ -19,7 +20,8 @@ export default async function handler(
 			data: {
 				username,
 				job,
-				hours: parseFloat(hours)
+				hours: parseFloat(hours),
+				messageId: messageId ?? uuid()
 			}
 		});
 

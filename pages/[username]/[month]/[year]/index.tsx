@@ -206,7 +206,16 @@ const dateBodyTemplate = (report: NiceReport) => {
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
-	return report.job.replaceAll('*', '\n*').replaceAll('-', '\n-');
+	if (report.job === '---BRAK---') {
+		return report.job;
+	}
+
+	const lines = report.job.replaceAll(/\* */g, '*').replaceAll(/\- */g, '-');
+	return (
+		<div>
+			<pre>{lines}</pre>
+		</div>
+	);
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
