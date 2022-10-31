@@ -7,7 +7,10 @@ import { range } from 'lodash';
 import Holidays from 'date-holidays';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
+import { Tooltip } from 'primereact/tooltip';
 import { Dayjs } from 'dayjs';
+import { Card } from 'primereact/card';
+import classNames from 'classnames';
 
 type NiceReport = {
 	username: string;
@@ -139,13 +142,13 @@ export const getServerSideProps = async (
 				? reports.map((r) => ({
 						...r,
 						highlight,
-						created_at: dayjs(r.created_at).format('DD-MM-YYYY'),
+						created_at: dayjs(r.created_at).format('DD.MM.YYYY'),
 						week: dayjs(r.created_at).isoWeek(),
 						isHoliday: isHolidayOrOff(dayjs(r.created_at))
 				  }))
 				: [
 						{
-							created_at: dayjs(date).format('DD-MM-YYYY'),
+							created_at: dayjs(date).format('DD.MM.YYYY'),
 							username: username as string,
 							job: '---BRAK---',
 							hours: 0,
@@ -168,18 +171,10 @@ export const getServerSideProps = async (
 			// offDays: offDaysInMonth.map((d) => d.toString())
 			// reports: reports.map((r) => ({
 			// 	...r,
-			// 	created_at: dayjs(r.created_at).format('DD-MM-YYYY')
+			// 	created_at: dayjs(r.created_at).format('DD.MM.YYYY')
 			// }))
 		}
 	};
-};
-
-const headerTemplate = (report: NiceReport) => {
-	return (
-		<div>
-			<span>Tydzień {report.week}</span>
-		</div>
-	);
 };
 
 const getUniqueDates = (reports: NiceReport[]) => [
@@ -189,37 +184,131 @@ const getUniqueDates = (reports: NiceReport[]) => [
 const countHours = (reports: NiceReport[]) =>
 	reports.reduce((prev, curr) => prev + curr.hours, 0);
 
+const rowClass = (report: NiceReport) => {
+	return {
+		'bg-blue-100 ': report.isHoliday
+	};
+};
+
+const weekDays = [
+	'',
+	'Poniedziałek',
+	'Wtorek',
+	'Środa',
+	'Czwartek',
+	'Piątek',
+	'Sobota',
+	'Niedziela'
+];
+
+const dateBodyTemplate = (report: NiceReport) => {
+	const date = dayjs(report.created_at, 'DD.MM.YYYY');
+	return `${weekDays[date.isoWeekday()]}, ${date.format('DD MMM')}`;
+};
+
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
+	const headerTemplate = (report: NiceReport) => {
+		const firstDay = tableData.find((r) => r.week === report.week)?.created_at;
+		const lastDay = tableData
+			.filter((r) => r.week === report.week)
+			.pop()?.created_at;
+
+		const weekNumber = report.week - tableData[0].week + 1;
+
+		const tooltip = `${firstDay} - ${lastDay}`;
+
+		return (
+			<>
+				<Tooltip target='.header' mouseTrack mouseTrackLeft={10} />
+				<div
+					className='header'
+					style={{ width: '80vw' }}
+					data-pr-tooltip={tooltip}
+				>
+					<strong>Tydzień {weekNumber}</strong>
+				</div>
+			</>
+		);
+	};
+
 	const footerTemplate = (report: NiceReport) => {
 		const reportsForWeek = tableData.filter((d) => d.week === report.week);
 		const workingDaysInWeek = getUniqueDates(
 			reportsForWeek.filter((d) => !d.isHoliday)
 		);
 
+		const workedHours = countHours(reportsForWeek);
+		const hoursToWork = workingDaysInWeek.length * workdayHours;
+
+		const isQuotaMet = workedHours > hoursToWork;
+
 		return (
 			<td colSpan={3}>
-				<strong>
-					W sumie {countHours(reportsForWeek)} na{' '}
-					{workingDaysInWeek.length * workdayHours} godzin
-				</strong>
+				<span>
+					W sumie <strong>{workedHours}</strong> na{' '}
+					<strong>{hoursToWork}</strong> godzin - bilans{' '}
+					<strong>
+						<span
+							className={classNames({
+								'text-red-600': !isQuotaMet,
+								'text-green-600': isQuotaMet
+							})}
+						>
+							{(workedHours - hoursToWork).toString().replace('-', '−')}
+						</span>
+					</strong>
+				</span>
 			</td>
 		);
 	};
+
+	const workedHours = countHours(tableData);
+	const hoursToWork =
+		getUniqueDates(tableData.filter((r) => !r.isHoliday)).length * workdayHours;
+	const isQuotaMet = workedHours > hoursToWork;
+
 	return (
 		<div className='px-8'>
-			<h4>{`Raport ${username} za okres ${month} ${year}`}</h4>
+			<div className='pt-5' style={{ fontSize: '26px' }}>
+				Raport <strong>{username}</strong> za okres{' '}
+				<strong>
+					{month} {year}
+				</strong>
+			</div>
+			<div className='my-5 p-2 highlight'>
+				<div>
+					<strong>Podsumowanie miesiąca</strong>
+				</div>
+				<div>Godziny do przepracowania: {hoursToWork}</div>
+				<div>Godziny przepracowane: {workedHours}</div>
+				<div
+					className={classNames({
+						'text-red-600': !isQuotaMet,
+						'text-green-600': isQuotaMet
+					})}
+				>
+					<strong>Bilans: {workedHours - hoursToWork}</strong>
+				</div>
+			</div>
 			<DataTable
 				resizableColumns
 				rowGroupMode='subheader'
 				groupRowsBy='week'
+				sortField='created_at'
+				rowClassName={rowClass}
+				sortOrder={1}
 				rowGroupHeaderTemplate={headerTemplate}
 				rowGroupFooterTemplate={footerTemplate}
 				value={tableData}
 				responsiveLayout='scroll'
 				scrollable
-				scrollHeight='80vh'
 			>
-				<Column field='created_at' header='Data' sortable />
+				<Column
+					field='created_at'
+					header='Data'
+					body={dateBodyTemplate}
+					sortable
+				/>
 				<Column field='job' header='Zakres' />
 				<Column
 					field='hours'
@@ -227,23 +316,6 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					body={(report) => report.hours + 'h'}
 				/>
 			</DataTable>
-			<div className='py-5'>
-				<div>
-					<strong>Podsumowanie miesiąca:</strong>
-				</div>
-				<div>
-					Godziny do przepracowania:{' '}
-					{getUniqueDates(tableData.filter((r) => !r.isHoliday)).length *
-						workdayHours}
-				</div>
-				<div>Godziny przepracowane: {countHours(tableData)}</div>
-				<div>
-					Bilans:{' '}
-					{countHours(tableData) -
-						getUniqueDates(tableData.filter((r) => !r.isHoliday)).length *
-							workdayHours}
-				</div>
-			</div>
 		</div>
 	);
 };
