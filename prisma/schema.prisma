@@ -11,10 +11,14 @@ datasource db {
 }
 
 model Report {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  username   String
-  job        String
-  hours      Float
-  created_at DateTime @default(now())
-  messageId  String   @unique
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  username     String
+  reporter     String
+  job          String
+  hours        Float
+  lastUpdateAt DateTime @default(now())
+  lastEditAt   DateTime @default(now())
+  messageAt    DateTime
+  messageId    String   @unique
+  createdAt    DateTime @default(now())
 }

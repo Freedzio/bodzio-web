@@ -13,10 +13,18 @@ import classNames from 'classnames';
 
 type NiceReport = {
 	username: string;
-	created_at: string;
+	reporter: string;
 	job: string;
 	hours: number;
+	createdAt: string;
+	lastEditAt: string;
+	lastUpdateAt: string;
+	messageAt: string;
+	messageId: string;
 	id: string;
+
+	day: string;
+
 	highlight: boolean;
 	week: number;
 	isHoliday: boolean;
@@ -24,9 +32,14 @@ type NiceReport = {
 
 type Report = {
 	username: string;
-	created_at: Date;
+	reporter: string;
 	job: string;
 	hours: number;
+	createdAt: Date;
+	lastUpdateAt: Date;
+	messageAt: Date;
+	lastEditAt: Date;
+	messageId: string;
 	id: string;
 };
 
@@ -40,7 +53,8 @@ type Props = {
 
 const mapReport = (report: Report) => ({
 	...report,
-	created_at: report.created_at.toString()
+	createdAt: report.createdAt.toString(),
+	editedAt: report.lastEditAt.toString()
 });
 
 const workdayHours = 6;
@@ -105,7 +119,7 @@ export const getServerSideProps = async (
 			username: {
 				equals: username as string
 			},
-			created_at: {
+			createdAt: {
 				gte: startDate.toISOString(),
 				lte: endDate.toISOString()
 			}
@@ -118,14 +132,14 @@ export const getServerSideProps = async (
 		.filter((v) => v.isBefore(dayjs()))
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.created_at).isSame(d, 'date'))
+				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
 				.map(mapReport)
 		}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.created_at).isSame(d, 'date'))
+				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
 				.map(mapReport)
 		}))
 		.filter((v) => Object.entries(v)[0][1].length > 0);
@@ -141,20 +155,30 @@ export const getServerSideProps = async (
 				? reports.map((r) => ({
 						...r,
 						highlight,
-						created_at: dayjs(r.created_at).format('DD.MM.YYYY'),
-						week: dayjs(r.created_at).isoWeek(),
-						isHoliday: isHolidayOrOff(dayjs(r.created_at))
+						createdAt: dayjs(r.createdAt).format(),
+						lastUpdateAt: dayjs(r.lastUpdateAt).format(),
+						lastEditAt: dayjs(r.lastEditAt).format(),
+						messageAt: dayjs(r.messageAt).format(),
+						week: dayjs(r.messageAt).isoWeek(),
+						isHoliday: isHolidayOrOff(dayjs(r.createdAt)),
+						day: dayjs(r.messageAt).format('DD.MM.YYYY')
 				  }))
 				: [
 						{
-							created_at: dayjs(date).format('DD.MM.YYYY'),
+							createdAt: dayjs(date).format(),
+							lastUpdateAt: dayjs(date).format(),
+							lastEditAt: dayjs(date).format(),
+							messageAt: dayjs(date).format(),
+							messageId: '',
 							username: username as string,
+							reporter: username as string,
 							job: '---BRAK---',
 							hours: 0,
 							highlight,
 							week: dayjs(date).isoWeek(),
 							id: '',
-							isHoliday: false
+							isHoliday: false,
+							day: dayjs(date).format('DD.MM.YYYY')
 						}
 				  ];
 		})
@@ -170,14 +194,14 @@ export const getServerSideProps = async (
 			// offDays: offDaysInMonth.map((d) => d.toString())
 			// reports: reports.map((r) => ({
 			// 	...r,
-			// 	created_at: dayjs(r.created_at).format('DD.MM.YYYY')
+			// 	createdAt: dayjs(r.createdAt).format('DD.MM.YYYY')
 			// }))
 		}
 	};
 };
 
 const getUniqueDates = (reports: NiceReport[]) => [
-	...new Set(reports.map((r) => r.created_at))
+	...new Set(reports.map((r) => r.day))
 ];
 
 const countHours = (reports: NiceReport[]) =>
@@ -201,7 +225,7 @@ const weekDays = [
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
-	const date = dayjs(report.created_at, 'DD.MM.YYYY');
+	const date = dayjs(report.messageAt);
 	return `${weekDays[date.isoWeekday()]}, ${date.format('DD MMM')}`;
 };
 
@@ -220,10 +244,10 @@ const jobBodyTemplate = (report: NiceReport) => {
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const headerTemplate = (report: NiceReport) => {
-		const firstDay = tableData.find((r) => r.week === report.week)?.created_at;
+		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
 		const lastDay = tableData
 			.filter((r) => r.week === report.week)
-			.pop()?.created_at;
+			.pop()?.messageAt;
 
 		const weekNumber = report.week - tableData[0].week + 1;
 
@@ -252,8 +276,6 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 		const workedHours = countHours(reportsForWeek);
 		const hoursToWork = workingDaysInWeek.length * workdayHours;
 
-		const isQuotaMet = workedHours > hoursToWork;
-
 		return (
 			<td colSpan={3}>
 				<span>
@@ -262,8 +284,8 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					<strong>
 						<span
 							className={classNames({
-								'text-red-600': !isQuotaMet,
-								'text-green-600': isQuotaMet
+								'text-red-600': workedHours < hoursToWork,
+								'text-green-600': workedHours > hoursToWork
 							})}
 						>
 							{(workedHours - hoursToWork).toString().replace('-', '−')}
@@ -277,7 +299,6 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const workedHours = countHours(tableData);
 	const hoursToWork =
 		getUniqueDates(tableData.filter((r) => !r.isHoliday)).length * workdayHours;
-	const isQuotaMet = workedHours > hoursToWork;
 
 	return (
 		<div className='px-8 pb-8'>
@@ -295,8 +316,8 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 				<div>Godziny przepracowane: {workedHours}</div>
 				<div
 					className={classNames({
-						'text-red-600': !isQuotaMet,
-						'text-green-600': isQuotaMet
+						'text-red-600': workedHours < hoursToWork,
+						'text-green-600': workedHours > hoursToWork
 					})}
 				>
 					<strong>Bilans: {workedHours - hoursToWork}</strong>
@@ -306,7 +327,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 				resizableColumns
 				rowGroupMode='subheader'
 				groupRowsBy='week'
-				sortField='created_at'
+				sortField='messageAt'
 				rowClassName={rowClass}
 				sortOrder={1}
 				rowGroupHeaderTemplate={headerTemplate}
@@ -316,7 +337,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 				scrollable
 			>
 				<Column
-					field='created_at'
+					field='messageAt'
 					header='Data'
 					body={dateBodyTemplate}
 					sortable
