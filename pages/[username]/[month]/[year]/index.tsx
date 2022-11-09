@@ -99,8 +99,8 @@ export const getServerSideProps = async (
 
 	const isHolidayOrOff = (date: Dayjs) =>
 		!!hd.isHoliday(date.toDate()) ||
-		date.get('day') === 0 ||
-		date.get('day') === 6;
+		date.isoWeekday() === 7 ||
+		date.isoWeekday() === 6;
 
 	const isWorkingDay = (date: Dayjs) => !isHolidayOrOff(date);
 
