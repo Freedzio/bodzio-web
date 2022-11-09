@@ -240,7 +240,7 @@ const jobBodyTemplate = (report: NiceReport) => {
 
 	const lines = report.job.replaceAll(/\* */g, '*').replaceAll(/\- */g, '-');
 
-	return <pre style={{ overflowWrap: 'break-word' }}>{lines}</pre>;
+	return <pre style={{ whiteSpace: 'pre-wrap' }}>{lines}</pre>;
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
