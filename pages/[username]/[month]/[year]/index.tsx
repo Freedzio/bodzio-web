@@ -101,9 +101,7 @@ export const getServerSideProps = async (
 
 	const isHolidayOrOff = (date: Dayjs) => {
 		return (
-			!!hd.isHoliday(date.toString()) ||
-			date.isoWeekday() === 7 ||
-			date.isoWeekday() === 6
+			!!hd.isHoliday(date.toString()) || date.day() === 0 || date.day() === 6
 		);
 	};
 
@@ -170,7 +168,7 @@ export const getServerSideProps = async (
 							.format(),
 						lastEditAt: dayjs(r.lastEditAt).tz(process.env.TIMEZONE).format(),
 						messageAt: dayjs(r.messageAt).tz(process.env.TIMEZONE).format(),
-						week: dayjs(r.messageAt).tz(process.env.TIMEZONE).isoWeek(),
+						week: dayjs(r.messageAt).tz(process.env.TIMEZONE).week(),
 						isHoliday: isHolidayOrOff(
 							dayjs(r.messageAt).tz(process.env.TIMEZONE)
 						),
@@ -190,7 +188,7 @@ export const getServerSideProps = async (
 							job: '---BRAK---',
 							hours: 0,
 							highlight,
-							week: dayjs(date).tz(process.env.TIMEZONE).isoWeek(),
+							week: dayjs(date).tz(process.env.TIMEZONE).week(),
 							id: '',
 							isHoliday: false,
 							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY')
@@ -229,21 +227,21 @@ const rowClass = (report: NiceReport) => {
 };
 
 const weekDays = [
-	'',
+	// '',
+	'Niedziela',
 	'Poniedziałek',
 	'Wtorek',
 	'Środa',
 	'Czwartek',
 	'Piątek',
-	'Sobota',
-	'Niedziela'
+	'Sobota'
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
 	const date = dayjs(report.messageAt).tz(process.env.TIMEZONE);
-	return `${date.isoWeekday()} ${date.isoWeek()} ${
-		weekDays[date.isoWeekday()]
-	}, ${date.format('DD MMM')}`;
+	return `${date.day()} ${date.week()} ${weekDays[date.day()]}, ${date.format(
+		'DD MMM'
+	)}`;
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
