@@ -119,7 +119,7 @@ export const getServerSideProps = async (
 			username: {
 				equals: username as string
 			},
-			createdAt: {
+			messageAt: {
 				gte: startDate.toISOString(),
 				lte: endDate.toISOString()
 			}
