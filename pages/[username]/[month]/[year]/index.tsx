@@ -257,6 +257,8 @@ const jobBodyTemplate = (report: NiceReport) => {
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
+	console.log(tableData);
+
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
 		const lastDay = tableData
