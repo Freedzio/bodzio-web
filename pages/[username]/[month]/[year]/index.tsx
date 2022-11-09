@@ -239,9 +239,7 @@ const weekDays = [
 
 const dateBodyTemplate = (report: NiceReport) => {
 	const date = dayjs(report.messageAt).tz(process.env.TIMEZONE);
-	return `${date.day()} ${date.week()} ${weekDays[date.day()]}, ${date.format(
-		'DD MMM'
-	)}`;
+	return `${weekDays[date.day()]}, ${date.format('DD MMM')}`;
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
@@ -255,8 +253,6 @@ const jobBodyTemplate = (report: NiceReport) => {
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
-	console.log(tableData);
-
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
 		const lastDay = tableData
@@ -265,7 +261,11 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 
 		const weekNumber = report.week - tableData[0].week + 1;
 
-		const tooltip = `${firstDay} - ${lastDay}`;
+		const tooltip = `${dayjs(firstDay)
+			.tz(process.env.TIMEZONE)
+			.format('DD.MM.YYYY')} - ${dayjs(lastDay)
+			.tz(process.env.TIMEZONE)
+			.format('DD.MM.YYYY')}`;
 
 		return (
 			<>
