@@ -226,7 +226,9 @@ const weekDays = [
 
 const dateBodyTemplate = (report: NiceReport) => {
 	const date = dayjs(report.messageAt);
-	return `${weekDays[date.isoWeekday()]}, ${date.format('DD MMM')}`;
+	return `${date.isoWeekday()} ${weekDays[date.isoWeekday()]}, ${date.format(
+		'DD MMM'
+	)}`;
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
