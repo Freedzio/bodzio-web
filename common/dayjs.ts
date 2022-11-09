@@ -7,10 +7,10 @@ import pl from 'dayjs/locale/pl';
 
 dayjs.extend(isoWeek);
 dayjs.extend(customParseFormat);
-// dayjs.extend(utc);
-// dayjs.extend(timezone);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
-// dayjs.tz.setDefault(process.env.TIMEZONE);
+dayjs.tz.setDefault(process.env.TIMEZONE);
 
 dayjs.locale(pl);
 

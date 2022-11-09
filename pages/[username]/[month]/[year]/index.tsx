@@ -86,16 +86,18 @@ export const getServerSideProps = async (
 	const holidays = hd.getHolidays(parseInt(year as string));
 
 	const startDate = dayjs()
+		.tz(process.env.TIMEZONE)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.startOf('month');
 
 	const endDate = dayjs()
+		.tz(process.env.TIMEZONE)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.endOf('month');
 
-	const daysRange = range(1, dayjs(endDate).get('date') + 1);
+	const daysRange = range(1, endDate.get('date') + 1);
 
 	const isHolidayOrOff = (date: Dayjs) => {
 		return (
@@ -132,17 +134,21 @@ export const getServerSideProps = async (
 	await prisma.$disconnect();
 
 	const workingDaysData = workingDaysInMonth
-		.filter((v) => v.isBefore(dayjs()))
+		.filter((v) => v.isBefore(dayjs().tz(process.env.TIMEZONE)))
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
+				.filter((r) =>
+					dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
+				)
 				.map(mapReport)
 		}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
+				.filter((r) =>
+					dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
+				)
 				.map(mapReport)
 		}))
 		.filter((v) => Object.entries(v)[0][1].length > 0);
@@ -158,30 +164,36 @@ export const getServerSideProps = async (
 				? reports.map((r) => ({
 						...r,
 						highlight,
-						createdAt: dayjs(r.createdAt).format(),
-						lastUpdateAt: dayjs(r.lastUpdateAt).format(),
-						lastEditAt: dayjs(r.lastEditAt).format(),
-						messageAt: dayjs(r.messageAt).format(),
-						week: dayjs(r.messageAt).isoWeek(),
-						isHoliday: isHolidayOrOff(dayjs(r.createdAt)),
-						day: dayjs(r.messageAt).format('DD.MM.YYYY')
+						createdAt: dayjs(r.createdAt).tz(process.env.TIMEZONE).format(),
+						lastUpdateAt: dayjs(r.lastUpdateAt)
+							.tz(process.env.TIMEZONE)
+							.format(),
+						lastEditAt: dayjs(r.lastEditAt).tz(process.env.TIMEZONE).format(),
+						messageAt: dayjs(r.messageAt).tz(process.env.TIMEZONE).format(),
+						week: dayjs(r.messageAt).tz(process.env.TIMEZONE).isoWeek(),
+						isHoliday: isHolidayOrOff(
+							dayjs(r.messageAt).tz(process.env.TIMEZONE)
+						),
+						day: dayjs(r.messageAt)
+							.tz(process.env.TIMEZONE)
+							.format('DD.MM.YYYY')
 				  }))
 				: [
 						{
-							createdAt: dayjs(date).format(),
-							lastUpdateAt: dayjs(date).format(),
-							lastEditAt: dayjs(date).format(),
-							messageAt: dayjs(date).format(),
+							createdAt: dayjs(date).tz(process.env.TIMEZONE).format(),
+							lastUpdateAt: dayjs(date).tz(process.env.TIMEZONE).format(),
+							lastEditAt: dayjs(date).tz(process.env.TIMEZONE).format(),
+							messageAt: dayjs(date).tz(process.env.TIMEZONE).format(),
 							messageId: '',
 							username: username as string,
 							reporter: username as string,
 							job: '---BRAK---',
 							hours: 0,
 							highlight,
-							week: dayjs(date).isoWeek(),
+							week: dayjs(date).tz(process.env.TIMEZONE).isoWeek(),
 							id: '',
 							isHoliday: false,
-							day: dayjs(date).format('DD.MM.YYYY')
+							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY')
 						}
 				  ];
 		})
@@ -228,7 +240,7 @@ const weekDays = [
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
-	const date = dayjs(report.messageAt);
+	const date = dayjs(report.messageAt).tz(process.env.TIMEZONE);
 	return `${date.isoWeekday()} ${date.isoWeek()} ${
 		weekDays[date.isoWeekday()]
 	}, ${date.format('DD MMM')}`;
