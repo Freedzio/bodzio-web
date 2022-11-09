@@ -86,11 +86,13 @@ export const getServerSideProps = async (
 	const holidays = hd.getHolidays(parseInt(year as string));
 
 	const startDate = dayjs()
+		.tz(process.env.TZ)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.startOf('month');
 
 	const endDate = dayjs()
+		.tz(process.env.TZ)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.endOf('month');
@@ -129,17 +131,17 @@ export const getServerSideProps = async (
 	await prisma.$disconnect();
 
 	const workingDaysData = workingDaysInMonth
-		.filter((v) => v.isBefore(dayjs()))
+		.filter((v) => v.isBefore(dayjs().tz(process.env.TZ)))
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
+				.filter((r) => dayjs(r.createdAt).tz(process.env.TZ).isSame(d, 'date'))
 				.map(mapReport)
 		}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
+				.filter((r) => dayjs(r.createdAt).tz(process.env.TZ).isSame(d, 'date'))
 				.map(mapReport)
 		}))
 		.filter((v) => Object.entries(v)[0][1].length > 0);
@@ -155,30 +157,30 @@ export const getServerSideProps = async (
 				? reports.map((r) => ({
 						...r,
 						highlight,
-						createdAt: dayjs(r.createdAt).format(),
-						lastUpdateAt: dayjs(r.lastUpdateAt).format(),
-						lastEditAt: dayjs(r.lastEditAt).format(),
-						messageAt: dayjs(r.messageAt).format(),
-						week: dayjs(r.messageAt).isoWeek(),
-						isHoliday: isHolidayOrOff(dayjs(r.createdAt)),
-						day: dayjs(r.messageAt).format('DD.MM.YYYY')
+						createdAt: dayjs(r.createdAt).tz(process.env.TZ).format(),
+						lastUpdateAt: dayjs(r.lastUpdateAt).tz(process.env.TZ).format(),
+						lastEditAt: dayjs(r.lastEditAt).tz(process.env.TZ).format(),
+						messageAt: dayjs(r.messageAt).tz(process.env.TZ).format(),
+						week: dayjs(r.messageAt).tz(process.env.TZ).isoWeek(),
+						isHoliday: isHolidayOrOff(dayjs(r.createdAt).tz(process.env.TZ)),
+						day: dayjs(r.messageAt).tz(process.env.TZ).format('DD.MM.YYYY')
 				  }))
 				: [
 						{
-							createdAt: dayjs(date).format(),
-							lastUpdateAt: dayjs(date).format(),
-							lastEditAt: dayjs(date).format(),
-							messageAt: dayjs(date).format(),
+							createdAt: dayjs(date).tz(process.env.TZ).format(),
+							lastUpdateAt: dayjs(date).tz(process.env.TZ).format(),
+							lastEditAt: dayjs(date).tz(process.env.TZ).format(),
+							messageAt: dayjs(date).tz(process.env.TZ).format(),
 							messageId: '',
 							username: username as string,
 							reporter: username as string,
 							job: '---BRAK---',
 							hours: 0,
 							highlight,
-							week: dayjs(date).isoWeek(),
+							week: dayjs(date).tz(process.env.TZ).isoWeek(),
 							id: '',
 							isHoliday: false,
-							day: dayjs(date).format('DD.MM.YYYY')
+							day: dayjs(date).tz(process.env.TZ).format('DD.MM.YYYY')
 						}
 				  ];
 		})
@@ -225,7 +227,7 @@ const weekDays = [
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
-	const date = dayjs(report.messageAt);
+	const date = dayjs(report.messageAt).tz(process.env.TZ);
 	return `${date.isoWeekday()} ${date.isoWeek()} ${
 		weekDays[date.isoWeekday()]
 	}, ${date.format('DD MMM')}`;
@@ -237,11 +239,8 @@ const jobBodyTemplate = (report: NiceReport) => {
 	}
 
 	const lines = report.job.replaceAll(/\* */g, '*').replaceAll(/\- */g, '-');
-	return (
-		<div>
-			<pre>{lines}</pre>
-		</div>
-	);
+
+	return <pre style={{ overflowWrap: 'break-word' }}>{lines}</pre>;
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {

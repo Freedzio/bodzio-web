@@ -10,6 +10,8 @@ dayjs.extend(customParseFormat);
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+dayjs.tz.setDefault(process.env.TIMEZONE);
+
 dayjs.locale(pl);
 
 export { dayjs };
