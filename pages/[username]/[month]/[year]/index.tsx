@@ -99,7 +99,7 @@ export const getServerSideProps = async (
 
 	const isHolidayOrOff = (date: Dayjs) => {
 		return (
-			!!hd.isHoliday(date.toDate()) ||
+			!!hd.isHoliday(date.toString()) ||
 			date.isoWeekday() === 7 ||
 			date.isoWeekday() === 6
 		);
@@ -114,8 +114,6 @@ export const getServerSideProps = async (
 	const offDaysInMonth = daysRange
 		.map((n) => startDate.set('date', n))
 		.filter(isHolidayOrOff);
-
-	console.log(startDate.toDate());
 
 	await prisma.$connect();
 
