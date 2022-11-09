@@ -167,7 +167,7 @@ export const getServerSideProps = async (
 							.format(),
 						lastEditAt: dayjs(r.lastEditAt).tz(process.env.TIMEZONE).format(),
 						messageAt: dayjs(r.messageAt).tz(process.env.TIMEZONE).format(),
-						week: dayjs(r.messageAt).tz(process.env.TIMEZONE).isoWeek(),
+						week: dayjs(r.messageAt).isoWeek(),
 						isHoliday: isHolidayOrOff(
 							dayjs(r.createdAt).tz(process.env.TIMEZONE)
 						),
@@ -187,7 +187,7 @@ export const getServerSideProps = async (
 							job: '---BRAK---',
 							hours: 0,
 							highlight,
-							week: dayjs(date).tz(process.env.TIMEZONE).isoWeek(),
+							week: dayjs(date).isoWeek(),
 							id: '',
 							isHoliday: false,
 							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY')
