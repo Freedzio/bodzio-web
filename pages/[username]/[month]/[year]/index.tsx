@@ -86,23 +86,24 @@ export const getServerSideProps = async (
 	const holidays = hd.getHolidays(parseInt(year as string));
 
 	const startDate = dayjs()
-		.tz(process.env.TIMEZONE)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.startOf('month');
 
 	const endDate = dayjs()
-		.tz(process.env.TIMEZONE)
 		.set('month', parseInt(month as string))
 		.set('year', parseInt(year as string))
 		.endOf('month');
 
-	const daysRange = range(1, endDate.get('date') + 1);
+	const daysRange = range(1, dayjs(endDate).get('date') + 1);
 
-	const isHolidayOrOff = (date: Dayjs) =>
-		!!hd.isHoliday(date.toDate()) ||
-		date.isoWeekday() === 7 ||
-		date.isoWeekday() === 6;
+	const isHolidayOrOff = (date: Dayjs) => {
+		return (
+			!!hd.isHoliday(date.toDate()) ||
+			date.isoWeekday() === 7 ||
+			date.isoWeekday() === 6
+		);
+	};
 
 	const isWorkingDay = (date: Dayjs) => !isHolidayOrOff(date);
 
@@ -113,6 +114,8 @@ export const getServerSideProps = async (
 	const offDaysInMonth = daysRange
 		.map((n) => startDate.set('date', n))
 		.filter(isHolidayOrOff);
+
+	console.log(startDate.toDate());
 
 	await prisma.$connect();
 
@@ -131,21 +134,17 @@ export const getServerSideProps = async (
 	await prisma.$disconnect();
 
 	const workingDaysData = workingDaysInMonth
-		.filter((v) => v.isBefore(dayjs().tz(process.env.TIMEZONE)))
+		.filter((v) => v.isBefore(dayjs()))
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) =>
-					dayjs(r.createdAt).tz(process.env.TIMEZONE).isSame(d, 'date')
-				)
+				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
 				.map(mapReport)
 		}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
 			[d.format()]: reports
-				.filter((r) =>
-					dayjs(r.createdAt).tz(process.env.TIMEZONE).isSame(d, 'date')
-				)
+				.filter((r) => dayjs(r.createdAt).isSame(d, 'date'))
 				.map(mapReport)
 		}))
 		.filter((v) => Object.entries(v)[0][1].length > 0);
@@ -161,26 +160,20 @@ export const getServerSideProps = async (
 				? reports.map((r) => ({
 						...r,
 						highlight,
-						createdAt: dayjs(r.createdAt).tz(process.env.TIMEZONE).format(),
-						lastUpdateAt: dayjs(r.lastUpdateAt)
-							.tz(process.env.TIMEZONE)
-							.format(),
-						lastEditAt: dayjs(r.lastEditAt).tz(process.env.TIMEZONE).format(),
-						messageAt: dayjs(r.messageAt).tz(process.env.TIMEZONE).format(),
+						createdAt: dayjs(r.createdAt).format(),
+						lastUpdateAt: dayjs(r.lastUpdateAt).format(),
+						lastEditAt: dayjs(r.lastEditAt).format(),
+						messageAt: dayjs(r.messageAt).format(),
 						week: dayjs(r.messageAt).isoWeek(),
-						isHoliday: isHolidayOrOff(
-							dayjs(r.createdAt).tz(process.env.TIMEZONE)
-						),
-						day: dayjs(r.messageAt)
-							.tz(process.env.TIMEZONE)
-							.format('DD.MM.YYYY')
+						isHoliday: isHolidayOrOff(dayjs(r.createdAt)),
+						day: dayjs(r.messageAt).format('DD.MM.YYYY')
 				  }))
 				: [
 						{
-							createdAt: dayjs(date).tz(process.env.TIMEZONE).format(),
-							lastUpdateAt: dayjs(date).tz(process.env.TIMEZONE).format(),
-							lastEditAt: dayjs(date).tz(process.env.TIMEZONE).format(),
-							messageAt: dayjs(date).tz(process.env.TIMEZONE).format(),
+							createdAt: dayjs(date).format(),
+							lastUpdateAt: dayjs(date).format(),
+							lastEditAt: dayjs(date).format(),
+							messageAt: dayjs(date).format(),
 							messageId: '',
 							username: username as string,
 							reporter: username as string,
@@ -190,7 +183,7 @@ export const getServerSideProps = async (
 							week: dayjs(date).isoWeek(),
 							id: '',
 							isHoliday: false,
-							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY')
+							day: dayjs(date).format('DD.MM.YYYY')
 						}
 				  ];
 		})
@@ -237,7 +230,7 @@ const weekDays = [
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
-	const date = dayjs(report.messageAt).tz(process.env.TIMEZONE);
+	const date = dayjs(report.messageAt);
 	return `${date.isoWeekday()} ${date.isoWeek()} ${
 		weekDays[date.isoWeekday()]
 	}, ${date.format('DD MMM')}`;
