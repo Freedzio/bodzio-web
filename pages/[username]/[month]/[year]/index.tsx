@@ -271,7 +271,7 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 		<div className='flex flex-wrap gap-1'>
 			{report.attachments.map((a) =>
 				isImage(a.url) ? (
-					<a href={a.url} target='_blank' rel='noopener'>
+					<a href={a.url} target='_blank' rel='noreferrer'>
 						<img
 							src={a.url}
 							style={{ maxWidth: '200px', maxHeight: '200px' }}
