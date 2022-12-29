@@ -12,6 +12,8 @@ import classNames from 'classnames';
 import { prisma } from '../../../../common/primsa-client';
 import { imageExtensions } from '../../../../common/image-extensions';
 import { videoExtensions } from '../../../../common/video-extensions';
+import { Button } from 'primereact/button';
+import Link from 'next/link';
 
 type NiceReport = {
 	username: string;
@@ -74,18 +76,18 @@ const isVideo = (url: string) =>
 const workdayHours = 6;
 
 const monthOptions = [
-	{ value: '0', name: 'styczeń' },
-	{ value: '1', name: 'luty' },
-	{ value: '2', name: 'marzec' },
-	{ value: '3', name: 'kwiecień' },
-	{ value: '4', name: 'maj' },
-	{ value: '5', name: 'czerwiec' },
-	{ value: '6', name: 'lipiec' },
-	{ value: '7', name: 'sierpień' },
-	{ value: '8', name: 'wrzesień' },
-	{ value: '9', name: 'październik' },
-	{ value: '10', name: 'listopad' },
-	{ value: '11', name: 'grudzień' }
+	'styczeń',
+	'luty',
+	'marzec',
+	'kwiecień',
+	'maj',
+	'czerwiec',
+	'lipiec',
+	'sierpień',
+	'wrzesień',
+	'październik',
+	'listopad',
+	'grudzień'
 ];
 
 export const getServerSideProps = async (
@@ -214,8 +216,7 @@ export const getServerSideProps = async (
 	return {
 		props: {
 			username: username as string,
-			month: monthOptions.find((m) => m.value.toString() === month)
-				?.name as string,
+			month: month as string,
 			year: year as string,
 			tableData: allWorkingData
 			// offDays: offDaysInMonth.map((d) => d.toString())
@@ -271,18 +272,22 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 		<div className='flex flex-wrap gap-1'>
 			{report.attachments.map((a) =>
 				isImage(a.url) ? (
-					<a href={a.url} target='_blank' rel='noreferrer'>
+					<a href={a.url} target='_blank' rel='noreferrer' key={a.url}>
 						<img
 							src={a.url}
 							style={{ maxWidth: '200px', maxHeight: '200px' }}
 						/>
 					</a>
 				) : isVideo(a.url) ? (
-					<video style={{ maxWidth: '200px', maxHeight: '200px' }} controls>
+					<video
+						style={{ maxWidth: '200px', maxHeight: '200px' }}
+						controls
+						key={a.url}
+					>
 						<source src={a.url} />
 					</video>
 				) : (
-					<a href={a.url} className='text-blue-500 w-full'>
+					<a href={a.url} className='text-blue-500 w-full' key={a.url}>
 						{a.name}
 					</a>
 				)
@@ -353,13 +358,39 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const hoursToWork =
 		getUniqueDates(tableData.filter((r) => !r.isHoliday)).length * workdayHours;
 
+	const getPrevMonthLink = () => {
+		const newDate = dayjs()
+			.set('month', parseInt(month))
+			.set('year', parseInt(year))
+			.subtract(1, 'month');
+
+		return `/${username}/${newDate.get('month')}/${newDate.get('year')}`;
+	};
+
+	const getNextMonthLink = () => {
+		const newDate = dayjs()
+			.set('month', parseInt(month))
+			.set('year', parseInt(year))
+			.add(1, 'month');
+
+		return `/${username}/${newDate.get('month')}/${newDate.get('year')}`;
+	};
+
 	return (
 		<div className='px-8 pb-8'>
 			<div className='pt-5' style={{ fontSize: '26px' }}>
 				Raport <strong>{username}</strong> za okres{' '}
 				<strong>
-					{month} {year}
+					{monthOptions[parseInt(month)]} {year}
 				</strong>
+			</div>
+			<div className='gap-2 flex mt-3'>
+				<Link href={getPrevMonthLink()}>
+					<Button className='p-button-info'>Poprzedni miesiąc</Button>
+				</Link>
+				<Link href={getNextMonthLink()}>
+					<Button className='p-button-info'>Następny miesiąc</Button>
+				</Link>
 			</div>
 			<div className='my-5 p-2 highlight'>
 				<div>
@@ -412,7 +443,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					body={(report) =>
 						!!report.link ? (
 							<a href={report.link} className='text-blue-500'>
-								Link do wiadomości
+								DISCORD
 							</a>
 						) : null
 					}
