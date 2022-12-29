@@ -1,8 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NextPage, NextPageContext } from 'next';
 import { dayjs } from '../../../../common/dayjs';
 import { range } from 'lodash';
-
 import Holidays from 'date-holidays';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
@@ -14,6 +13,11 @@ import { imageExtensions } from '../../../../common/image-extensions';
 import { videoExtensions } from '../../../../common/video-extensions';
 import { Button } from 'primereact/button';
 import Link from 'next/link';
+import { IncomingMessage, ServerResponse } from 'http';
+import { setCookie, getCookie } from 'cookies-next';
+import { InputSwitch } from 'primereact/inputswitch';
+
+const cookieName = 'shouldShowAllDays';
 
 type NiceReport = {
 	username: string;
@@ -90,10 +94,10 @@ const monthOptions = [
 	'grudzień'
 ];
 
-export const getServerSideProps = async (
-	context: NextPageContext
-): Promise<{ props: Props }> => {
-	const { username, month, year } = context.query;
+export const getServerSideProps = async ({
+	query
+}: NextPageContext): Promise<{ props: Props }> => {
+	const { username, month, year } = query;
 
 	const hd = new Holidays();
 	hd.init('PL');
@@ -145,8 +149,12 @@ export const getServerSideProps = async (
 
 	await prisma.$disconnect();
 
+	const shouldShowAllDays = !!getCookie(cookieName);
+
 	const workingDaysData = workingDaysInMonth
-		.filter((v) => v.isBefore(dayjs().tz(process.env.TIMEZONE)))
+		// .filter(
+		// 	(v) => shouldShowAllDays || v.isBefore(dayjs().tz(process.env.TIMEZONE))
+		// )
 		.map((d) => ({
 			[d.format()]: reports
 				.filter((r) =>
@@ -297,6 +305,8 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
+	const [showAll, setShowAll] = useState(false);
+
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
 		const lastDay = tableData
@@ -354,9 +364,13 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 		);
 	};
 
+	const finalData = tableData.filter(
+		(r) => showAll || !dayjs(r.messageAt).isAfter(dayjs().endOf('day'))
+	);
+
 	const workedHours = countHours(tableData);
 	const hoursToWork =
-		getUniqueDates(tableData.filter((r) => !r.isHoliday)).length * workdayHours;
+		getUniqueDates(finalData.filter((r) => !r.isHoliday)).length * workdayHours;
 
 	const getPrevMonthLink = () => {
 		const newDate = dayjs()
@@ -376,6 +390,15 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 		return `/${username}/${newDate.get('month')}/${newDate.get('year')}`;
 	};
 
+	const onToggle = () => {
+		setShowAll(!showAll);
+		localStorage.setItem(cookieName, !showAll ? '1' : '0');
+	};
+
+	useEffect(() => {
+		setShowAll(!!parseInt(localStorage.getItem(cookieName) as string));
+	}, []);
+
 	return (
 		<div className='px-8 pb-8'>
 			<div className='pt-5' style={{ fontSize: '26px' }}>
@@ -384,13 +407,15 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					{monthOptions[parseInt(month)]} {year}
 				</strong>
 			</div>
-			<div className='gap-2 flex mt-3'>
+			<div className='gap-2 flex align-items-center mt-3'>
 				<Link href={getPrevMonthLink()}>
 					<Button className='p-button-info'>Poprzedni miesiąc</Button>
 				</Link>
 				<Link href={getNextMonthLink()}>
 					<Button className='p-button-info'>Następny miesiąc</Button>
 				</Link>
+				<InputSwitch color='red' checked={showAll} onChange={onToggle} />
+				<span>Pokaż przyszłe dni</span>
 			</div>
 			<div className='my-5 p-2 highlight'>
 				<div>
@@ -416,7 +441,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 				sortOrder={1}
 				rowGroupHeaderTemplate={headerTemplate}
 				rowGroupFooterTemplate={footerTemplate}
-				value={tableData}
+				value={finalData}
 				responsiveLayout='scroll'
 				scrollable
 				tableStyle={{ tableLayout: 'auto' }}
