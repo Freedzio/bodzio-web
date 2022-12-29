@@ -16,6 +16,8 @@ model Report {
   reporter     String
   job          String
   hours        Float
+  attachments  Json[]   @default([])
+  link         String   @default("")
   lastUpdateAt DateTime @default(now())
   lastEditAt   DateTime @default(now())
   messageAt    DateTime

@@ -1,6 +1,5 @@
 import React from 'react';
 import { NextPage, NextPageContext } from 'next';
-import { PrismaClient } from '@prisma/client';
 import { dayjs } from '../../../../common/dayjs';
 import { range } from 'lodash';
 
@@ -10,6 +9,9 @@ import { Column } from 'primereact/column';
 import { Tooltip } from 'primereact/tooltip';
 import { Dayjs } from 'dayjs';
 import classNames from 'classnames';
+import { prisma } from '../../../../common/primsa-client';
+import { imageExtensions } from '../../../../common/image-extensions';
+import { videoExtensions } from '../../../../common/video-extensions';
 
 type NiceReport = {
 	username: string;
@@ -22,6 +24,8 @@ type NiceReport = {
 	messageAt: string;
 	messageId: string;
 	id: string;
+	attachments: any[];
+	link: string;
 
 	day: string;
 
@@ -41,6 +45,8 @@ type Report = {
 	lastEditAt: Date;
 	messageId: string;
 	id: string;
+	attachments: any[];
+	link: string;
 };
 
 type Props = {
@@ -51,11 +57,19 @@ type Props = {
 	year: string;
 };
 
+type Attachment = { url: string; name: string };
+
 const mapReport = (report: Report) => ({
 	...report,
 	createdAt: report.createdAt.toString(),
 	editedAt: report.lastEditAt.toString()
 });
+
+const isImage = (url: string) =>
+	imageExtensions.includes(url.split('.').pop() as string);
+
+const isVideo = (url: string) =>
+	videoExtensions.includes(url.split('.').pop() as string);
 
 const workdayHours = 6;
 
@@ -78,8 +92,6 @@ export const getServerSideProps = async (
 	context: NextPageContext
 ): Promise<{ props: Props }> => {
 	const { username, month, year } = context.query;
-
-	const prisma = new PrismaClient();
 
 	const hd = new Holidays();
 	hd.init('PL');
@@ -191,7 +203,9 @@ export const getServerSideProps = async (
 							week: dayjs(date).tz(process.env.TIMEZONE).week(),
 							id: '',
 							isHoliday: false,
-							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY')
+							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY'),
+							attachments: [],
+							link: ''
 						}
 				  ];
 		})
@@ -250,6 +264,31 @@ const jobBodyTemplate = (report: NiceReport) => {
 	const lines = report.job.replaceAll(/\* */g, '*').replaceAll(/\- */g, '-');
 
 	return <pre style={{ whiteSpace: 'pre-wrap' }}>{lines}</pre>;
+};
+
+const attachmentsBodyTemplate = (report: NiceReport) => {
+	return (
+		<div className='flex flex-wrap gap-1'>
+			{report.attachments.map((a) =>
+				isImage(a.url) ? (
+					<a href={a.url} target='_blank'>
+						<img
+							src={a.url}
+							style={{ maxWidth: '200px', maxHeight: '200px' }}
+						/>
+					</a>
+				) : isVideo(a.url) ? (
+					<video style={{ maxWidth: '200px', maxHeight: '200px' }} controls>
+						<source src={a.url} />
+					</video>
+				) : (
+					<a href={a.url} target='_blank' className='text-blue-500 w-full'>
+						{a.name}
+					</a>
+				)
+			)}
+		</div>
+	);
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
@@ -349,6 +388,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 				value={tableData}
 				responsiveLayout='scroll'
 				scrollable
+				tableStyle={{ tableLayout: 'auto' }}
 			>
 				<Column
 					field='messageAt'
@@ -361,6 +401,21 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					field='hours'
 					header='Czas'
 					body={(report) => report.hours + 'h'}
+				/>
+				<Column
+					field='job'
+					body={attachmentsBodyTemplate}
+					header='Załączniki'
+				/>
+				<Column
+					field='hours'
+					body={(report) =>
+						!!report.link ? (
+							<a href={report.link} target='_blank' className='text-blue-500'>
+								Link do wiadomości
+							</a>
+						) : null
+					}
 				/>
 			</DataTable>
 		</div>
