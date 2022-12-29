@@ -411,7 +411,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					field='hours'
 					body={(report) =>
 						!!report.link ? (
-							<a href={report.link} target='_blank' className='text-blue-500'>
+							<a href={report.link} className='text-blue-500'>
 								Link do wiadomości
 							</a>
 						) : null
