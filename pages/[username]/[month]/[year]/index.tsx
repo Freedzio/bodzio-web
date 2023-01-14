@@ -16,6 +16,7 @@ import Link from 'next/link';
 import { IncomingMessage, ServerResponse } from 'http';
 import { setCookie, getCookie } from 'cookies-next';
 import { InputSwitch } from 'primereact/inputswitch';
+import { Report } from '@prisma/client';
 
 const cookieName = 'shouldShowAllDays';
 
@@ -38,21 +39,6 @@ type NiceReport = {
 	highlight: boolean;
 	week: number;
 	isHoliday: boolean;
-};
-
-type Report = {
-	username: string;
-	reporter: string;
-	job: string;
-	hours: number;
-	createdAt: Date;
-	lastUpdateAt: Date;
-	messageAt: Date;
-	lastEditAt: Date;
-	messageId: string;
-	id: string;
-	attachments: any[];
-	link: string;
 };
 
 type Props = {
@@ -270,9 +256,24 @@ const jobBodyTemplate = (report: NiceReport) => {
 		return report.job;
 	}
 
-	const lines = report.job.replaceAll(/\* */g, '*').replaceAll(/\- */g, '-');
+	const linkTagTemplate = (match: string) => {
+		return `<a class="text-blue-500" target="_blank" href="https://miro.com/app/board/o9J_llj3lkM=/?cot=14&moveToWidget=${match.replace(
+			'#',
+			''
+		)}">${match}</a>`;
+	};
 
-	return <pre style={{ whiteSpace: 'pre-wrap' }}>{lines}</pre>;
+	const lines = report.job
+		.replaceAll(/\* */g, '*')
+		.replaceAll(/\- */g, '-')
+		.replaceAll(/\B#[0-9]+\b/g, linkTagTemplate);
+
+	return (
+		<pre
+			style={{ whiteSpace: 'pre-wrap' }}
+			dangerouslySetInnerHTML={{ __html: lines }}
+		></pre>
+	);
 };
 
 const attachmentsBodyTemplate = (report: NiceReport) => {
@@ -302,6 +303,14 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 			)}
 		</div>
 	);
+};
+
+const discordLinkBodyTemplate = (report: NiceReport) => {
+	return !!report.link ? (
+		<a href={report.link} className='text-blue-500'>
+			DISCORD
+		</a>
+	) : null;
 };
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
@@ -336,7 +345,7 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	};
 
 	const footerTemplate = (report: NiceReport) => {
-		const reportsForWeek = tableData.filter((d) => d.week === report.week);
+		const reportsForWeek = finalData.filter((d) => d.week === report.week);
 		const workingDaysInWeek = getUniqueDates(
 			reportsForWeek.filter((d) => !d.isHoliday)
 		);
@@ -407,12 +416,18 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					{monthOptions[parseInt(month)]} {year}
 				</strong>
 			</div>
-			<div className='gap-2 flex align-items-center mt-3'>
+			<div className='gap-2 flex align-items-center mt-3 noprint'>
 				<Link href={getPrevMonthLink()}>
-					<Button className='p-button-info'>Poprzedni miesiąc</Button>
+					<Button className='p-button-info p-button-outlined'>
+						<i className='pi pi-chevron-left' style={{ fontSize: '1rem' }}></i>
+						{/* Poprzedni miesiąc */}
+					</Button>
 				</Link>
 				<Link href={getNextMonthLink()}>
-					<Button className='p-button-info'>Następny miesiąc</Button>
+					<Button className='p-button-info p-button-outlined'>
+						{/* Następny miesiąc */}
+						<i className='pi pi-chevron-right' style={{ fontSize: '1rem' }}></i>
+					</Button>
 				</Link>
 				<InputSwitch color='red' checked={showAll} onChange={onToggle} />
 				<span>Pokaż przyszłe dni</span>
@@ -464,15 +479,11 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 					header='Załączniki'
 				/>
 				<Column
-					field='hours'
-					body={(report) =>
-						!!report.link ? (
-							<a href={report.link} className='text-blue-500'>
-								DISCORD
-							</a>
-						) : null
-					}
+					className='noprint'
+					field='link'
+					body={discordLinkBodyTemplate}
 				/>
+				{/* <Column field='miroIds' body={miroIdsBodyTemplate} /> */}
 			</DataTable>
 		</div>
 	);

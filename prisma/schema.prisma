@@ -17,6 +17,7 @@ model Report {
   job          String
   hours        Float
   attachments  Json[]   @default([])
+  // miroIds      String[] @default([])
   link         String   @default("")
   lastUpdateAt DateTime @default(now())
   lastEditAt   DateTime @default(now())

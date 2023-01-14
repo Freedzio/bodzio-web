@@ -48,3 +48,9 @@ tr.p-rowgroup-footer {
 .p-inputswitch.p-inputswitch-checked .p-inputswitch-slider {
 	background-color: #3b82f6 !important;
 }
+
+@media print {
+	.noprint {
+		display: none !important;
+	}
+}

@@ -37,6 +37,11 @@ export default async function handler(
 
 			const backupId = uuid();
 
+			const miroIds = (job as string)
+				.split(/\s/)
+				.filter((w) => /^#[0-9]+$/.test(w))
+				?.map((id) => id.replace('#', ''));
+
 			await prisma.report.upsert({
 				where: { messageId: messageId ?? backupId },
 				create: {
