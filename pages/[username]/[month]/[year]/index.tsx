@@ -33,6 +33,7 @@ type NiceReport = {
 	messageAt: string;
 	messageId: string;
 	id: string;
+	isSecret: boolean;
 	attachments: any[];
 	link: string;
 
@@ -50,8 +51,6 @@ type Props = {
 	month: string;
 	year: string;
 };
-
-type Attachment = { url: string; name: string };
 
 const mapReport = (report: Report) => ({
 	...report,
@@ -182,7 +181,8 @@ export const getServerSideProps = async ({
 							isHoliday: false,
 							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY'),
 							attachments: [],
-							link: ''
+							link: '',
+							isSecret: false
 						}
 				  ];
 		})
@@ -230,6 +230,10 @@ const dateBodyTemplate = (report: NiceReport) => {
 const jobBodyTemplate = (report: NiceReport) => {
 	if (report.job === '---BRAK---') {
 		return report.job;
+	}
+
+	if (report.isSecret) {
+		return 'Prezesowane';
 	}
 
 	const linkTagTemplate = (match: string) => {

@@ -17,11 +17,11 @@ model Report {
   job          String
   hours        Float
   attachments  Json[]   @default([])
-  // miroIds      String[] @default([])
   link         String   @default("")
   lastUpdateAt DateTime @default(now())
   lastEditAt   DateTime @default(now())
   messageAt    DateTime
   messageId    String   @unique
   createdAt    DateTime @default(now())
+  isSecret     Boolean  @default(false)
 }
