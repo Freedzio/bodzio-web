@@ -1,6 +1,6 @@
 import { Report } from '@prisma/client';
-import dayjs from 'dayjs';
 import { NextApiRequest, NextApiResponse } from 'next';
+import { dayjs } from '../../common/dayjs';
 import { prisma } from '../../common/primsa-client';
 import { workdayHours } from '../[username]/[month]/[year]';
 import { getWorkingDaysForMonth } from './common/month-days';
