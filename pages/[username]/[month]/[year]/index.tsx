@@ -1,20 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { NextPage, NextPageContext } from 'next';
 import { dayjs } from '../../../../common/dayjs';
-import { range } from 'lodash';
-import Holidays from 'date-holidays';
 import { DataTable } from 'primereact/datatable';
 import { Column } from 'primereact/column';
 import { Tooltip } from 'primereact/tooltip';
-import { Dayjs } from 'dayjs';
 import classNames from 'classnames';
 import { prisma } from '../../../../common/primsa-client';
 import { imageExtensions } from '../../../../common/image-extensions';
 import { videoExtensions } from '../../../../common/video-extensions';
 import { Button } from 'primereact/button';
 import Link from 'next/link';
-import { IncomingMessage, ServerResponse } from 'http';
-import { setCookie, getCookie } from 'cookies-next';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Report } from '@prisma/client';
 import {
@@ -22,6 +17,8 @@ import {
 	getWorkingDaysForMonth,
 	isHolidayOrOff
 } from '../../../api/common/month-days';
+import { useSession, signIn, signOut } from 'next-auth/react';
+import { ProgressSpinner } from 'primereact/progressspinner';
 
 const cookieName = 'shouldShowAllDays';
 
@@ -294,6 +291,7 @@ const discordLinkBodyTemplate = (report: NiceReport) => {
 
 const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const [showAll, setShowAll] = useState(false);
+	const { data: session, status } = useSession();
 
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
@@ -386,6 +384,54 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	useEffect(() => {
 		setShowAll(!!parseInt(localStorage.getItem(cookieName) as string));
 	}, []);
+
+	useEffect(() => {
+		if (status === 'unauthenticated') {
+			signIn();
+		}
+	}, [status]);
+
+	if (
+		!!session &&
+		!session?.user?.email?.endsWith(
+			process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN as string
+		)
+	) {
+		return (
+			<div
+				className='flex flex-column justify-content-center align-items-center'
+				style={{ height: '100vh' }}
+			>
+				<h3>Ojojoj, wygląda na to że nie mogę Cię tutaj wpuścić...</h3>
+				<Button onClick={() => signOut()}>Wyloguj się</Button>
+				<br />
+				<h4>Na pocieszenie masz tutaj zdjęcie pieska</h4>
+				<img
+					src='https://www.dierapotheker.be/media/image/95/37/34/pup-gezondheidscontrole-2.png'
+					style={{ maxWidth: '300px' }}
+				/>
+			</div>
+		);
+	}
+
+	if (status === 'loading') {
+		return (
+			<div
+				className='flex flex-column justify-content-center align-items-center'
+				style={{ height: '80vh' }}
+			>
+				<h3>Trwa bodziowanie...</h3>
+				<ProgressSpinner
+					style={{ width: '100px', height: '100px' }}
+					strokeWidth='8'
+				/>
+			</div>
+		);
+	}
+
+	if (status !== 'authenticated') {
+		return null;
+	}
 
 	return (
 		<div className='px-8 pb-8'>
