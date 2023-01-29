@@ -1,6 +1,7 @@
 import Holidays from 'date-holidays';
-import dayjs, { Dayjs } from 'dayjs';
+import { Dayjs } from 'dayjs';
 import { range } from 'lodash';
+import { dayjs } from '../../../common/dayjs';
 
 const getDaysForMonth = (month: string, year: string) => {
 	const startDate = dayjs()

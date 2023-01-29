@@ -1,7 +1,7 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import dayjs from 'dayjs';
 import { NextApiRequest, NextApiResponse } from 'next';
 import { v4 as uuid } from 'uuid';
+import { dayjs } from '../../common/dayjs';
 import { prisma } from '../../common/primsa-client';
 
 export default async function handler(
