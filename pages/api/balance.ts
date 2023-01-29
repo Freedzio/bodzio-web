@@ -5,8 +5,6 @@ import { prisma } from '../../common/primsa-client';
 import { workdayHours } from '../[username]/[month]/[year]';
 import { getWorkingDaysForMonth } from './common/month-days';
 
-const startingDate = dayjs('11-01-2022');
-
 const countHours = (reports: Report[]) =>
 	reports.reduce((prev, curr) => prev + curr.hours, 0);
 
@@ -30,20 +28,24 @@ export default async function handler(
 			await prisma.$connect();
 
 			const reports = await prisma.report.findMany({
-				where: { username: { equals: requestedUser as string } }
+				where: { username: { equals: requestedUser as string } },
+				orderBy: { messageAt: 'asc' }
 			});
 
 			await prisma.$disconnect();
 
+			const firstReportDay = dayjs(reports[0].messageAt);
+			const startOfMonthOfFirstReport = firstReportDay.startOf('month');
+
 			const allMonths = dayjs()
 				.endOf('month')
 				.add(1, 'day')
-				.diff(startingDate, 'months');
+				.diff(startOfMonthOfFirstReport, 'months');
 
 			let balance = [];
 
 			for (let i = 0; i < allMonths; i++) {
-				const startDate = startingDate.add(i, 'months');
+				const startDate = startOfMonthOfFirstReport.add(i, 'months');
 
 				const reportsForMonth = reports.filter((r) =>
 					dayjs(r.messageAt).isSame(startDate, 'month')
@@ -53,8 +55,11 @@ export default async function handler(
 					getWorkingDaysForMonth(
 						startDate.get('month').toString(),
 						startDate.get('year').toString()
-					).filter((d) => d.isBefore(dayjs().startOf('day'))).length *
-					workdayHours;
+					).filter(
+						(d) =>
+							d.isBefore(dayjs().startOf('day')) &&
+							d.isAfter(firstReportDay.subtract(1, 'day').endOf('day'))
+					).length * workdayHours;
 
 				const workedHours = countHours(reportsForMonth);
 

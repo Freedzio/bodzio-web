@@ -50,6 +50,7 @@ type Props = {
 	username: string;
 	month: string;
 	year: string;
+	firstReportDate: string;
 };
 
 const mapReport = (report: Report) => ({
@@ -119,7 +120,21 @@ export const getServerSideProps = async ({
 		}
 	});
 
+	const firstReport = await prisma.report.findMany({
+		where: {
+			username: {
+				equals: username as string
+			}
+		},
+		orderBy: {
+			messageAt: 'asc'
+		},
+		take: 1
+	});
+
 	await prisma.$disconnect();
+
+	const firstReportDate = dayjs(firstReport[0].messageAt).format();
 
 	const workingDaysData = workingDaysInMonth.map((d) => ({
 		[d.format()]: reports
@@ -193,7 +208,8 @@ export const getServerSideProps = async ({
 			username: username as string,
 			month: month as string,
 			year: year as string,
-			tableData: allWorkingData
+			tableData: allWorkingData,
+			firstReportDate: firstReportDate
 		}
 	};
 };
@@ -293,9 +309,19 @@ const discordLinkBodyTemplate = (report: NiceReport) => {
 	) : null;
 };
 
-const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
+const MonthReport: NextPage<Props> = ({
+	tableData,
+	month,
+	year,
+	username,
+	firstReportDate
+}) => {
 	const [showAll, setShowAll] = useState(false);
 	const { data: session, status } = useSession();
+
+	const minimalAllowedDate = dayjs(firstReportDate)
+		.subtract(1, 'day')
+		.endOf('day');
 
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
@@ -328,7 +354,9 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 	const footerTemplate = (report: NiceReport) => {
 		const reportsForWeek = finalData.filter((d) => d.week === report.week);
 		const workingDaysInWeek = getUniqueDates(
-			reportsForWeek.filter((d) => !d.isHoliday)
+			reportsForWeek.filter(
+				(d) => !d.isHoliday && dayjs(d.messageAt).isAfter(minimalAllowedDate)
+			)
 		);
 
 		const workedHours = countHours(reportsForWeek);
@@ -360,7 +388,11 @@ const MonthReport: NextPage<Props> = ({ tableData, month, year, username }) => {
 
 	const workedHours = countHours(tableData);
 	const hoursToWork =
-		getUniqueDates(finalData.filter((r) => !r.isHoliday)).length * workdayHours;
+		getUniqueDates(
+			finalData.filter(
+				(r) => !r.isHoliday && dayjs(r.messageAt).isAfter(minimalAllowedDate)
+			)
+		).length * workdayHours;
 
 	const getPrevMonthLink = () => {
 		const newDate = dayjs()
