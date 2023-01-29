@@ -24,13 +24,13 @@ export default async function handler(
 		console.log('INCOMING BODY');
 		console.log(req.body);
 
-		const { username } = JSON.parse(req.body);
+		const { requestedUser } = JSON.parse(req.body);
 
 		try {
 			await prisma.$connect();
 
 			const reports = await prisma.report.findMany({
-				where: { username: { equals: username as string } }
+				where: { username: { equals: requestedUser as string } }
 			});
 
 			await prisma.$disconnect();
