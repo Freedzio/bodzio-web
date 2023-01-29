@@ -17,6 +17,11 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { setCookie, getCookie } from 'cookies-next';
 import { InputSwitch } from 'primereact/inputswitch';
 import { Report } from '@prisma/client';
+import {
+	getOffDaysForMonth,
+	getWorkingDaysForMonth,
+	isHolidayOrOff
+} from '../../../api/common/month-days';
 
 const cookieName = 'shouldShowAllDays';
 
@@ -63,7 +68,7 @@ const isImage = (url: string) =>
 const isVideo = (url: string) =>
 	videoExtensions.includes(url.split('.').pop() as string);
 
-const workdayHours = 6;
+export const workdayHours = 6;
 
 const monthOptions = [
 	'styczeń',
@@ -85,10 +90,6 @@ export const getServerSideProps = async ({
 }: NextPageContext): Promise<{ props: Props }> => {
 	const { username, month, year } = query;
 
-	const hd = new Holidays();
-	hd.init('PL');
-	const holidays = hd.getHolidays(parseInt(year as string));
-
 	const startDate = dayjs()
 		.tz(process.env.TIMEZONE)
 		.set('month', parseInt(month as string))
@@ -101,23 +102,12 @@ export const getServerSideProps = async ({
 		.set('year', parseInt(year as string))
 		.endOf('month');
 
-	const daysRange = range(1, endDate.get('date') + 1);
+	const workingDaysInMonth = getWorkingDaysForMonth(
+		month as string,
+		year as string
+	);
 
-	const isHolidayOrOff = (date: Dayjs) => {
-		return (
-			!!hd.isHoliday(date.toString()) || date.day() === 0 || date.day() === 6
-		);
-	};
-
-	const isWorkingDay = (date: Dayjs) => !isHolidayOrOff(date);
-
-	const workingDaysInMonth = daysRange
-		.map((n) => startDate.set('date', n))
-		.filter(isWorkingDay);
-
-	const offDaysInMonth = daysRange
-		.map((n) => startDate.set('date', n))
-		.filter(isHolidayOrOff);
+	const offDaysInMonth = getOffDaysForMonth(month as string, year as string);
 
 	await prisma.$connect();
 
@@ -135,19 +125,13 @@ export const getServerSideProps = async ({
 
 	await prisma.$disconnect();
 
-	const shouldShowAllDays = !!getCookie(cookieName);
-
-	const workingDaysData = workingDaysInMonth
-		// .filter(
-		// 	(v) => shouldShowAllDays || v.isBefore(dayjs().tz(process.env.TIMEZONE))
-		// )
-		.map((d) => ({
-			[d.format()]: reports
-				.filter((r) =>
-					dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
-				)
-				.map(mapReport)
-		}));
+	const workingDaysData = workingDaysInMonth.map((d) => ({
+		[d.format()]: reports
+			.filter((r) =>
+				dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
+			)
+			.map(mapReport)
+	}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
@@ -213,11 +197,6 @@ export const getServerSideProps = async ({
 			month: month as string,
 			year: year as string,
 			tableData: allWorkingData
-			// offDays: offDaysInMonth.map((d) => d.toString())
-			// reports: reports.map((r) => ({
-			// 	...r,
-			// 	createdAt: dayjs(r.createdAt).format('DD.MM.YYYY')
-			// }))
 		}
 	};
 };
