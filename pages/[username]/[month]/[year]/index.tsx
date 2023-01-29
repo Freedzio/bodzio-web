@@ -390,7 +390,10 @@ const MonthReport: NextPage<Props> = ({
 	const hoursToWork =
 		getUniqueDates(
 			finalData.filter(
-				(r) => !r.isHoliday && dayjs(r.messageAt).isAfter(minimalAllowedDate)
+				(r) =>
+					!r.isHoliday &&
+					// dayjs(r.messageAt).isBefore(dayjs().startOf('day')) &&
+					dayjs(r.messageAt).isAfter(minimalAllowedDate)
 			)
 		).length * workdayHours;
 

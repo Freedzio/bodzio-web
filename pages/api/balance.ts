@@ -34,8 +34,16 @@ export default async function handler(
 
 			await prisma.$disconnect();
 
-			const firstReportDay = dayjs(reports[0].messageAt);
-			const startOfMonthOfFirstReport = firstReportDay.startOf('month');
+			const firstReportDay = dayjs(reports[0].messageAt).tz(
+				process.env.TIMEZONE
+			);
+
+			console.log(firstReportDay);
+			const startOfMonthOfFirstReport = firstReportDay
+				.tz(process.env.TIMEZONE)
+				.startOf('month');
+
+			console.log(startOfMonthOfFirstReport);
 
 			const allMonths = dayjs()
 				.endOf('month')
@@ -57,11 +65,17 @@ export default async function handler(
 						startDate.get('year').toString()
 					).filter(
 						(d) =>
-							d.isBefore(dayjs().startOf('day')) &&
+							d.isBefore(dayjs().tz(process.env.TIMEZONE).startOf('day')) &&
 							d.isAfter(firstReportDay.subtract(1, 'day').endOf('day'))
 					).length * workdayHours;
 
 				const workedHours = countHours(reportsForMonth);
+
+				console.log(startDate.get('month').toString());
+				console.log(workedHours, 'worked');
+				console.log(hoursToWork, 'to work');
+				console.log(workedHours - hoursToWork, 'balance');
+				console.log();
 
 				balance.push(workedHours - hoursToWork);
 			}
