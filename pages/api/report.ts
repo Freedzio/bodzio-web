@@ -27,7 +27,8 @@ export default async function handler(
 			messageId,
 			messageAt,
 			attachments,
-			link
+			link,
+			isSecret
 		} = JSON.parse(req.body);
 
 		try {
@@ -47,7 +48,8 @@ export default async function handler(
 					messageAt: dayjs(messageAt).toDate(),
 					messageId: messageId ?? backupId,
 					attachments,
-					link
+					link,
+					isSecret
 				},
 				update: {
 					reporter,
@@ -56,7 +58,8 @@ export default async function handler(
 					lastEditAt: dayjs(lastEditAt ?? dayjs()).toDate(),
 					lastUpdateAt: dayjs().toDate(),
 					attachments,
-					link
+					link,
+					isSecret
 				}
 			});
 
