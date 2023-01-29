@@ -34,16 +34,9 @@ export default async function handler(
 
 			await prisma.$disconnect();
 
-			const firstReportDay = dayjs(reports[0].messageAt).tz(
-				process.env.TIMEZONE
-			);
+			const firstReportDay = dayjs(reports[0].messageAt);
 
-			console.log(firstReportDay);
-			const startOfMonthOfFirstReport = firstReportDay
-				.tz(process.env.TIMEZONE)
-				.startOf('month');
-
-			console.log(startOfMonthOfFirstReport);
+			const startOfMonthOfFirstReport = firstReportDay.startOf('month');
 
 			const allMonths = dayjs()
 				.endOf('month')
