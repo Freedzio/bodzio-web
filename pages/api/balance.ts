@@ -64,12 +64,6 @@ export default async function handler(
 
 				const workedHours = countHours(reportsForMonth);
 
-				console.log(startDate.get('month').toString());
-				console.log(workedHours, 'worked');
-				console.log(hoursToWork, 'to work');
-				console.log(workedHours - hoursToWork, 'balance');
-				console.log();
-
 				balance.push(workedHours - hoursToWork);
 			}
 
