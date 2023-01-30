@@ -59,7 +59,7 @@ export default async function handler(
 					).filter(
 						(d) =>
 							d.isBefore(dayjs().tz(process.env.TIMEZONE).startOf('day')) &&
-							d.isAfter(firstReportDay.subtract(1, 'day').endOf('day'))
+							d.isAfter(firstReportDay.subtract(1, 'day'))
 					).length * workdayHours;
 
 				const workedHours = countHours(reportsForMonth);
