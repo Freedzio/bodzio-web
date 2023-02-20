@@ -253,10 +253,9 @@ const jobBodyTemplate = (report: NiceReport) => {
 	}
 
 	const linkTagTemplate = (match: string) => {
-		return `<a class="text-blue-500" target="_blank" href="https://miro.com/app/board/o9J_llj3lkM=/?cot=14&moveToWidget=${match.replace(
-			'#',
-			''
-		)}">${match}</a>`;
+		return `<a class="text-blue-500" target="_blank" href="${
+			process.env.NEXT_PUBLIC_MIRO_LINK_TEMPLATE
+		}${match.replace('#', '')}">${match}</a>`;
 	};
 
 	const lines = report.job
