@@ -429,12 +429,12 @@ const MonthReport: NextPage<Props> = ({
 		}
 	}, [status]);
 
-	if (
-		!!session &&
-		!session?.user?.email?.endsWith(
+	const canEnter =
+		session?.user?.email?.endsWith(
 			process.env.NEXT_PUBLIC_ALLOWED_EMAIL_DOMAIN as string
-		)
-	) {
+		) || session?.user?.email === process.env.NEXT_PUBLIC_DEV_EMAIL;
+
+	if (!!session && !canEnter) {
 		return (
 			<div
 				className='flex flex-column justify-content-center align-items-center'

@@ -58,8 +58,9 @@ export default async function handler(
 						startDate.get('year').toString()
 					).filter(
 						(d) =>
-							d.isBefore(dayjs().tz(process.env.TIMEZONE).startOf('day')) &&
-							d.isAfter(firstReportDay.subtract(1, 'day'))
+							d.isBefore(
+								dayjs().tz(process.env.TIMEZONE).add(1, 'days').startOf('day')
+							) && d.isAfter(firstReportDay.subtract(1, 'day'))
 					).length * workdayHours;
 
 				const workedHours = countHours(reportsForMonth);
