@@ -25,3 +25,12 @@ model Report {
   createdAt    DateTime @default(now())
   isSecret     Boolean  @default(false)
 }
+
+model DayDurations {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  myId           String   @unique
+  duration       Float
+  username       String
+  fromDateString String
+  fromDate       DateTime
+}

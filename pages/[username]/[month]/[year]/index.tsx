@@ -11,14 +11,16 @@ import { videoExtensions } from '../../../../common/video-extensions';
 import { Button } from 'primereact/button';
 import Link from 'next/link';
 import { InputSwitch } from 'primereact/inputswitch';
-import { Report } from '@prisma/client';
+import { DayDurations, Report } from '@prisma/client';
 import {
+	getHoursToWorkForDays,
 	getOffDaysForMonth,
 	getWorkingDaysForMonth,
 	isHolidayOrOff
 } from '../../../api/common/month-days';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { ProgressSpinner } from 'primereact/progressspinner';
+import { getTotalBalance } from '../../../api/common/get-total-balance';
 
 const cookieName = 'shouldShowAllDays';
 
@@ -51,6 +53,8 @@ type Props = {
 	month: string;
 	year: string;
 	firstReportDate: string;
+	dayDurations: DayDurations[];
+	totalBalance: number;
 };
 
 const mapReport = (report: Report) => ({
@@ -119,6 +123,16 @@ export const getServerSideProps = async ({
 			}
 		}
 	});
+
+	const dayDurations = await prisma.dayDurations.findMany({
+		where: { username: { equals: username as string } },
+		orderBy: { fromDate: 'desc' }
+	});
+
+	const niceDurations = (await dayDurations).map((dd) => ({
+		...dd,
+		fromDate: dayjs(dd.fromDate).toISOString()
+	}));
 
 	const firstReport = await prisma.report.findMany({
 		where: {
@@ -203,8 +217,12 @@ export const getServerSideProps = async ({
 		})
 		.flat();
 
+	const totalBalance = await getTotalBalance(username as string);
+
 	return {
 		props: {
+			totalBalance,
+			dayDurations: niceDurations as any,
 			username: username as string,
 			month: month as string,
 			year: year as string,
@@ -313,7 +331,9 @@ const MonthReport: NextPage<Props> = ({
 	month,
 	year,
 	username,
-	firstReportDate
+	firstReportDate,
+	dayDurations,
+	totalBalance
 }) => {
 	const [showAll, setShowAll] = useState(false);
 	const { data: session, status } = useSession();
@@ -356,10 +376,10 @@ const MonthReport: NextPage<Props> = ({
 			reportsForWeek.filter(
 				(d) => !d.isHoliday && dayjs(d.messageAt).isAfter(minimalAllowedDate)
 			)
-		);
+		).map((x) => dayjs(x, 'DD.MM.YYYY'));
 
 		const workedHours = countHours(reportsForWeek);
-		const hoursToWork = workingDaysInWeek.length * workdayHours;
+		const hoursToWork = getHoursToWorkForDays(workingDaysInWeek, dayDurations);
 
 		return (
 			<td colSpan={3}>
@@ -386,7 +406,7 @@ const MonthReport: NextPage<Props> = ({
 	);
 
 	const workedHours = countHours(tableData);
-	const hoursToWork =
+	const hoursToWork = getHoursToWorkForDays(
 		getUniqueDates(
 			finalData.filter(
 				(r) =>
@@ -394,7 +414,9 @@ const MonthReport: NextPage<Props> = ({
 					// dayjs(r.messageAt).isBefore(dayjs().startOf('day')) &&
 					dayjs(r.messageAt).isAfter(minimalAllowedDate)
 			)
-		).length * workdayHours;
+		).map((x) => dayjs(x, 'DD.MM.YYYY')),
+		dayDurations
+	);
 
 	const getPrevMonthLink = () => {
 		const newDate = dayjs()
@@ -507,7 +529,15 @@ const MonthReport: NextPage<Props> = ({
 						'text-green-600': workedHours > hoursToWork
 					})}
 				>
-					<strong>Bilans: {workedHours - hoursToWork}</strong>
+					<strong>Bilans miesięczny: {workedHours - hoursToWork}</strong>
+				</div>
+				<div
+					className={classNames({
+						'text-red-600': totalBalance < 0,
+						'text-green-600': totalBalance > 0
+					})}
+				>
+					<strong>Bilans całkowity: {totalBalance}</strong>
 				</div>
 			</div>
 			<DataTable

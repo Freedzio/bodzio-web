@@ -1,7 +1,9 @@
+import { DayDurations } from '@prisma/client';
 import Holidays from 'date-holidays';
 import { Dayjs } from 'dayjs';
 import { range } from 'lodash';
 import { dayjs } from '../../../common/dayjs';
+import { workdayHours } from '../../[username]/[month]/[year]';
 
 const getDaysForMonth = (month: string, year: string) => {
 	const startDate = dayjs()
@@ -38,4 +40,28 @@ export const getWorkingDaysForMonth = (month: string, year: string) => {
 
 export const getOffDaysForMonth = (month: string, year: string) => {
 	return getDaysForMonth(month, year).filter(isHolidayOrOff);
+};
+
+export const getHoursToWorkForDays = (
+	days: Dayjs[],
+	dayDurations: DayDurations[]
+) => {
+	return days
+		.map((day) => {
+			// nie ma ustawionych godzin pracy -> domyślna wartość
+			if (dayDurations.length === 0) {
+				return workdayHours;
+			}
+
+			// znajdź pierwszy ustawiony dzień pracy
+			// który jest przed lub tego samego dnia, co ten dzień
+			const firstDayDurationBeforeDay = dayDurations.find(
+				(dd) =>
+					dayjs(dd.fromDate).startOf('day').valueOf() <=
+					day.startOf('day').valueOf()
+			);
+
+			return firstDayDurationBeforeDay?.duration ?? workdayHours;
+		})
+		.reduce((prev, curr) => prev + curr, 0);
 };
