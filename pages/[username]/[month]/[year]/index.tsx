@@ -36,6 +36,7 @@ type NiceReport = {
 	messageId: string;
 	id: string;
 	isSecret: boolean;
+	isPto: boolean;
 	attachments: any[];
 	link: string;
 
@@ -148,7 +149,7 @@ export const getServerSideProps = async ({
 
 	await prisma.$disconnect();
 
-	const firstReportDate = dayjs(firstReport[0].messageAt).format();
+	const firstReportDate = dayjs(firstReport[0]?.messageAt).format();
 
 	const workingDaysData = workingDaysInMonth.map((d) => ({
 		[d.format()]: reports
@@ -211,7 +212,8 @@ export const getServerSideProps = async ({
 							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY'),
 							attachments: [],
 							link: '',
-							isSecret: false
+							isSecret: false,
+							isPto: false
 						}
 				  ];
 		})
@@ -241,7 +243,8 @@ const countHours = (reports: NiceReport[]) =>
 
 const rowClass = (report: NiceReport) => {
 	return {
-		'bg-blue-100 ': report.isHoliday
+		'bg-blue-100 ': report.isHoliday,
+		'bg-yellow-100 ': report.isPto
 	};
 };
 
@@ -564,7 +567,9 @@ const MonthReport: NextPage<Props> = ({
 				<Column
 					field='hours'
 					header='Czas'
-					body={(report) => report.hours + 'h'}
+					body={(report: NiceReport) =>
+						report.hours + 'h' + (report.isPto ? ' URLOP' : '')
+					}
 				/>
 				<Column
 					field='job'

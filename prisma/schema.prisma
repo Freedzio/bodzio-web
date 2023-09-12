@@ -24,6 +24,7 @@ model Report {
   messageId    String   @unique
   createdAt    DateTime @default(now())
   isSecret     Boolean  @default(false)
+  isPto        Boolean  @default(false)
 }
 
 model DayDurations {

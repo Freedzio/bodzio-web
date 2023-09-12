@@ -21,7 +21,7 @@ export const getTotalBalance = async (username: string) => {
 
 	await prisma.$disconnect();
 
-	const firstReportDay = dayjs(reports[0].messageAt);
+	const firstReportDay = dayjs(reports[0]?.messageAt);
 
 	const startOfMonthOfFirstReport = firstReportDay.startOf('month');
 
