@@ -1,28 +1,28 @@
-import React, { useEffect, useState } from 'react';
-import { NextPage, NextPageContext } from 'next';
-import { dayjs } from '../../../../common/dayjs';
-import { DataTable } from 'primereact/datatable';
-import { Column } from 'primereact/column';
-import { Tooltip } from 'primereact/tooltip';
-import classNames from 'classnames';
-import { prisma } from '../../../../common/primsa-client';
-import { imageExtensions } from '../../../../common/image-extensions';
-import { videoExtensions } from '../../../../common/video-extensions';
-import { Button } from 'primereact/button';
-import Link from 'next/link';
-import { InputSwitch } from 'primereact/inputswitch';
-import { DayDurations, Report } from '@prisma/client';
+import React, { useEffect, useState } from "react";
+import { NextPage, NextPageContext } from "next";
+import { dayjs } from "../../../../common/dayjs";
+import { DataTable } from "primereact/datatable";
+import { Column } from "primereact/column";
+import { Tooltip } from "primereact/tooltip";
+import classNames from "classnames";
+import { prisma } from "../../../../common/primsa-client";
+import { imageExtensions } from "../../../../common/image-extensions";
+import { videoExtensions } from "../../../../common/video-extensions";
+import { Button } from "primereact/button";
+import Link from "next/link";
+import { InputSwitch } from "primereact/inputswitch";
+import { DayDurations, Report } from "@prisma/client";
 import {
 	getHoursToWorkForDays,
 	getOffDaysForMonth,
 	getWorkingDaysForMonth,
-	isHolidayOrOff
-} from '../../../api/common/month-days';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { ProgressSpinner } from 'primereact/progressspinner';
-import { getTotalBalance } from '../../../api/common/get-total-balance';
+	isHolidayOrOff,
+} from "../../../api/common/month-days";
+import { useSession, signIn, signOut } from "next-auth/react";
+import { ProgressSpinner } from "primereact/progressspinner";
+import { getTotalBalance } from "../../../api/common/get-total-balance";
 
-const cookieName = 'shouldShowAllDays';
+const cookieName = "shouldShowAllDays";
 
 type NiceReport = {
 	username: string;
@@ -61,48 +61,48 @@ type Props = {
 const mapReport = (report: Report) => ({
 	...report,
 	createdAt: report.createdAt.toString(),
-	editedAt: report.lastEditAt.toString()
+	editedAt: report.lastEditAt.toString(),
 });
 
 const isImage = (url: string) =>
-	imageExtensions.includes(url.split('.').pop() as string);
+	imageExtensions.includes(url.split(".").pop() as string);
 
 const isVideo = (url: string) =>
-	videoExtensions.includes(url.split('.').pop() as string);
+	videoExtensions.includes(url.split(".").pop() as string);
 
 export const workdayHours = 6;
 
 const monthOptions = [
-	'styczeń',
-	'luty',
-	'marzec',
-	'kwiecień',
-	'maj',
-	'czerwiec',
-	'lipiec',
-	'sierpień',
-	'wrzesień',
-	'październik',
-	'listopad',
-	'grudzień'
+	"styczeń",
+	"luty",
+	"marzec",
+	"kwiecień",
+	"maj",
+	"czerwiec",
+	"lipiec",
+	"sierpień",
+	"wrzesień",
+	"październik",
+	"listopad",
+	"grudzień",
 ];
 
 export const getServerSideProps = async ({
-	query
+	query,
 }: NextPageContext): Promise<{ props: Props }> => {
 	const { username, month, year } = query;
 
 	const startDate = dayjs()
 		.tz(process.env.TIMEZONE)
-		.set('month', parseInt(month as string))
-		.set('year', parseInt(year as string))
-		.startOf('month');
+		.set("month", parseInt(month as string))
+		.set("year", parseInt(year as string))
+		.startOf("month");
 
 	const endDate = dayjs()
 		.tz(process.env.TIMEZONE)
-		.set('month', parseInt(month as string))
-		.set('year', parseInt(year as string))
-		.endOf('month');
+		.set("month", parseInt(month as string))
+		.set("year", parseInt(year as string))
+		.endOf("month");
 
 	const workingDaysInMonth = getWorkingDaysForMonth(
 		month as string,
@@ -116,35 +116,35 @@ export const getServerSideProps = async ({
 	const reports = await prisma.report.findMany({
 		where: {
 			username: {
-				equals: username as string
+				equals: username as string,
 			},
 			messageAt: {
 				gte: startDate.toISOString(),
-				lte: endDate.toISOString()
-			}
-		}
+				lte: endDate.toISOString(),
+			},
+		},
 	});
 
 	const dayDurations = await prisma.dayDurations.findMany({
 		where: { username: { equals: username as string } },
-		orderBy: { fromDate: 'desc' }
+		orderBy: { fromDate: "desc" },
 	});
 
 	const niceDurations = (await dayDurations).map((dd) => ({
 		...dd,
-		fromDate: dayjs(dd.fromDate).toISOString()
+		fromDate: dayjs(dd.fromDate).toISOString(),
 	}));
 
 	const firstReport = await prisma.report.findMany({
 		where: {
 			username: {
-				equals: username as string
-			}
+				equals: username as string,
+			},
 		},
 		orderBy: {
-			messageAt: 'asc'
+			messageAt: "asc",
 		},
-		take: 1
+		take: 1,
 	});
 
 	await prisma.$disconnect();
@@ -154,18 +154,18 @@ export const getServerSideProps = async ({
 	const workingDaysData = workingDaysInMonth.map((d) => ({
 		[d.format()]: reports
 			.filter((r) =>
-				dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
+				dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, "date")
 			)
-			.map(mapReport)
+			.map(mapReport),
 	}));
 
 	const offDaysData = offDaysInMonth
 		.map((d) => ({
 			[d.format()]: reports
 				.filter((r) =>
-					dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, 'date')
+					dayjs(r.messageAt).tz(process.env.TIMEZONE).isSame(d, "date")
 				)
-				.map(mapReport)
+				.map(mapReport),
 		}))
 		.filter((v) => Object.entries(v)[0][1].length > 0);
 
@@ -192,7 +192,7 @@ export const getServerSideProps = async ({
 						),
 						day: dayjs(r.messageAt)
 							.tz(process.env.TIMEZONE)
-							.format('DD.MM.YYYY')
+							.format("DD.MM.YYYY"),
 				  }))
 				: [
 						{
@@ -200,21 +200,21 @@ export const getServerSideProps = async ({
 							lastUpdateAt: dayjs(date).tz(process.env.TIMEZONE).format(),
 							lastEditAt: dayjs(date).tz(process.env.TIMEZONE).format(),
 							messageAt: dayjs(date).tz(process.env.TIMEZONE).format(),
-							messageId: '',
+							messageId: "",
 							username: username as string,
 							reporter: username as string,
-							job: '---BRAK---',
+							job: "---BRAK---",
 							hours: 0,
 							highlight,
 							week: dayjs(date).tz(process.env.TIMEZONE).week(),
-							id: '',
+							id: "",
 							isHoliday: false,
-							day: dayjs(date).tz(process.env.TIMEZONE).format('DD.MM.YYYY'),
+							day: dayjs(date).tz(process.env.TIMEZONE).format("DD.MM.YYYY"),
 							attachments: [],
-							link: '',
+							link: "",
 							isSecret: false,
-							isPto: false
-						}
+							isPto: false,
+						},
 				  ];
 		})
 		.flat();
@@ -229,13 +229,13 @@ export const getServerSideProps = async ({
 			month: month as string,
 			year: year as string,
 			tableData: allWorkingData,
-			firstReportDate: firstReportDate
-		}
+			firstReportDate: firstReportDate,
+		},
 	};
 };
 
 const getUniqueDates = (reports: NiceReport[]) => [
-	...new Set(reports.map((r) => r.day))
+	...new Set(reports.map((r) => r.day)),
 ];
 
 const countHours = (reports: NiceReport[]) =>
@@ -243,52 +243,51 @@ const countHours = (reports: NiceReport[]) =>
 
 const rowClass = (report: NiceReport) => {
 	return {
-		'bg-blue-100 ': report.isHoliday,
-		'bg-yellow-100 ': report.isPto
+		"bg-blue-100 ": report.isHoliday,
+		"bg-yellow-100 ": report.isPto,
 	};
 };
 
 const weekDays = [
 	// '',
-	'Niedziela',
-	'Poniedziałek',
-	'Wtorek',
-	'Środa',
-	'Czwartek',
-	'Piątek',
-	'Sobota'
+	"Niedziela",
+	"Poniedziałek",
+	"Wtorek",
+	"Środa",
+	"Czwartek",
+	"Piątek",
+	"Sobota",
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
 	const date = dayjs(report.messageAt).tz(process.env.TIMEZONE);
-	return `${weekDays[date.day()]}, ${date.format('DD MMM')}`;
+	return `${weekDays[date.day()]}, ${date.format("DD MMM")}`;
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
-	if (report.job === '---BRAK---') {
+	if (report.job === "---BRAK---") {
 		return report.job;
 	}
 
 	if (report.isSecret) {
-		return 'Prezesowane';
+		return "Prezesowane";
 	}
 
 	const linkTagTemplate = (match: string) => {
 		return `<a class="text-blue-500" target="_blank" href="${
 			process.env.NEXT_PUBLIC_MIRO_LINK_TEMPLATE
-		}${match.replace('#', '')}">${match}</a>`;
+		}${match.replace("#", "")}">${match}</a>`;
 	};
 
 	const lines = report.job
-		.replaceAll(/\* */g, '*')
-		.replaceAll(/\- */g, '-')
+		.replaceAll(/\* */g, "*")
+		.replaceAll(/\- */g, "-")
 		.replaceAll(/\B#[0-9]+\b/g, linkTagTemplate);
 
 	return (
 		<pre
-			style={{ whiteSpace: 'pre-wrap' }}
-			dangerouslySetInnerHTML={{ __html: lines }}
-		></pre>
+			style={{ whiteSpace: "pre-wrap" }}
+			dangerouslySetInnerHTML={{ __html: lines }}></pre>
 	);
 };
 
@@ -300,15 +299,14 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 					<a href={a.url} target='_blank' rel='noreferrer' key={a.url}>
 						<img
 							src={a.url}
-							style={{ maxWidth: '200px', maxHeight: '200px' }}
+							style={{ maxWidth: "200px", maxHeight: "200px" }}
 						/>
 					</a>
 				) : isVideo(a.url) ? (
 					<video
-						style={{ maxWidth: '200px', maxHeight: '200px' }}
+						style={{ maxWidth: "200px", maxHeight: "200px" }}
 						controls
-						key={a.url}
-					>
+						key={a.url}>
 						<source src={a.url} />
 					</video>
 				) : (
@@ -336,14 +334,14 @@ const MonthReport: NextPage<Props> = ({
 	username,
 	firstReportDate,
 	dayDurations,
-	totalBalance
+	totalBalance,
 }) => {
 	const [showAll, setShowAll] = useState(false);
 	const { data: session, status } = useSession();
 
 	const minimalAllowedDate = dayjs(firstReportDate)
-		.subtract(1, 'day')
-		.endOf('day');
+		.subtract(1, "day")
+		.endOf("day");
 
 	const headerTemplate = (report: NiceReport) => {
 		const firstDay = tableData.find((r) => r.week === report.week)?.messageAt;
@@ -355,18 +353,17 @@ const MonthReport: NextPage<Props> = ({
 
 		const tooltip = `${dayjs(firstDay)
 			.tz(process.env.TIMEZONE)
-			.format('DD.MM.YYYY')} - ${dayjs(lastDay)
+			.format("DD.MM.YYYY")} - ${dayjs(lastDay)
 			.tz(process.env.TIMEZONE)
-			.format('DD.MM.YYYY')}`;
+			.format("DD.MM.YYYY")}`;
 
 		return (
 			<>
 				<Tooltip target='.header' mouseTrack mouseTrackLeft={10} />
 				<div
 					className='header'
-					style={{ width: '80vw' }}
-					data-pr-tooltip={tooltip}
-				>
+					style={{ width: "80vw" }}
+					data-pr-tooltip={tooltip}>
 					<strong>Tydzień {weekNumber}</strong>
 				</div>
 			</>
@@ -379,7 +376,7 @@ const MonthReport: NextPage<Props> = ({
 			reportsForWeek.filter(
 				(d) => !d.isHoliday && dayjs(d.messageAt).isAfter(minimalAllowedDate)
 			)
-		).map((x) => dayjs(x, 'DD.MM.YYYY'));
+		).map((x) => dayjs(x, "DD.MM.YYYY"));
 
 		const workedHours = countHours(reportsForWeek);
 		const hoursToWork = getHoursToWorkForDays(workingDaysInWeek, dayDurations);
@@ -387,16 +384,15 @@ const MonthReport: NextPage<Props> = ({
 		return (
 			<td colSpan={3}>
 				<span>
-					W sumie <strong>{workedHours}</strong> na{' '}
-					<strong>{hoursToWork}</strong> godzin - bilans{' '}
+					W sumie <strong>{workedHours}</strong> na{" "}
+					<strong>{hoursToWork}</strong> godzin - bilans{" "}
 					<strong>
 						<span
 							className={classNames({
-								'text-red-600': workedHours < hoursToWork,
-								'text-green-600': workedHours > hoursToWork
-							})}
-						>
-							{(workedHours - hoursToWork).toString().replace('-', '−')}
+								"text-red-600": workedHours < hoursToWork,
+								"text-green-600": workedHours > hoursToWork,
+							})}>
+							{(workedHours - hoursToWork).toString().replace("-", "−")}
 						</span>
 					</strong>
 				</span>
@@ -405,7 +401,7 @@ const MonthReport: NextPage<Props> = ({
 	};
 
 	const finalData = tableData.filter(
-		(r) => showAll || !dayjs(r.messageAt).isAfter(dayjs().endOf('day'))
+		(r) => showAll || !dayjs(r.messageAt).isAfter(dayjs().endOf("day"))
 	);
 
 	const workedHours = countHours(tableData);
@@ -417,31 +413,31 @@ const MonthReport: NextPage<Props> = ({
 					// dayjs(r.messageAt).isBefore(dayjs().startOf('day')) &&
 					dayjs(r.messageAt).isAfter(minimalAllowedDate)
 			)
-		).map((x) => dayjs(x, 'DD.MM.YYYY')),
+		).map((x) => dayjs(x, "DD.MM.YYYY")),
 		dayDurations
 	);
 
 	const getPrevMonthLink = () => {
 		const newDate = dayjs()
-			.set('month', parseInt(month))
-			.set('year', parseInt(year))
-			.subtract(1, 'month');
+			.set("month", parseInt(month))
+			.set("year", parseInt(year))
+			.subtract(1, "month");
 
-		return `/${username}/${newDate.get('month')}/${newDate.get('year')}`;
+		return `/${username}/${newDate.get("month")}/${newDate.get("year")}`;
 	};
 
 	const getNextMonthLink = () => {
 		const newDate = dayjs()
-			.set('month', parseInt(month))
-			.set('year', parseInt(year))
-			.add(1, 'month');
+			.set("month", parseInt(month))
+			.set("year", parseInt(year))
+			.add(1, "month");
 
-		return `/${username}/${newDate.get('month')}/${newDate.get('year')}`;
+		return `/${username}/${newDate.get("month")}/${newDate.get("year")}`;
 	};
 
 	const onToggle = () => {
 		setShowAll(!showAll);
-		localStorage.setItem(cookieName, !showAll ? '1' : '0');
+		localStorage.setItem(cookieName, !showAll ? "1" : "0");
 	};
 
 	useEffect(() => {
@@ -449,7 +445,7 @@ const MonthReport: NextPage<Props> = ({
 	}, []);
 
 	useEffect(() => {
-		if (status === 'unauthenticated') {
+		if (status === "unauthenticated") {
 			signIn();
 		}
 	}, [status]);
@@ -463,43 +459,41 @@ const MonthReport: NextPage<Props> = ({
 		return (
 			<div
 				className='flex flex-column justify-content-center align-items-center'
-				style={{ height: '100vh' }}
-			>
+				style={{ height: "100vh" }}>
 				<h3>Ojojoj, wygląda na to że nie mogę Cię tutaj wpuścić...</h3>
 				<Button onClick={() => signOut()}>Wyloguj się</Button>
 				<br />
 				<h4>Na pocieszenie masz tutaj zdjęcie pieska</h4>
 				<img
 					src='https://www.dierapotheker.be/media/image/95/37/34/pup-gezondheidscontrole-2.png'
-					style={{ maxWidth: '300px' }}
+					style={{ maxWidth: "300px" }}
 				/>
 			</div>
 		);
 	}
 
-	if (status === 'loading') {
+	if (status === "loading") {
 		return (
 			<div
 				className='flex flex-column justify-content-center align-items-center'
-				style={{ height: '80vh' }}
-			>
+				style={{ height: "80vh" }}>
 				<h3>Trwa bodziowanie...</h3>
 				<ProgressSpinner
-					style={{ width: '100px', height: '100px' }}
+					style={{ width: "100px", height: "100px" }}
 					strokeWidth='8'
 				/>
 			</div>
 		);
 	}
 
-	if (status !== 'authenticated') {
+	if (status !== "authenticated") {
 		return null;
 	}
 
 	return (
 		<div className='px-8 pb-8'>
-			<div className='pt-5' style={{ fontSize: '26px' }}>
-				Raport <strong>{username}</strong> za okres{' '}
+			<div className='pt-5' style={{ fontSize: "26px" }}>
+				Raport <strong>{username}</strong> za okres{" "}
 				<strong>
 					{monthOptions[parseInt(month)]} {year}
 				</strong>
@@ -507,14 +501,14 @@ const MonthReport: NextPage<Props> = ({
 			<div className='gap-2 flex align-items-center mt-3 noprint'>
 				<Link href={getPrevMonthLink()}>
 					<Button className='p-button-info p-button-outlined'>
-						<i className='pi pi-chevron-left' style={{ fontSize: '1rem' }}></i>
+						<i className='pi pi-chevron-left' style={{ fontSize: "1rem" }}></i>
 						{/* Poprzedni miesiąc */}
 					</Button>
 				</Link>
 				<Link href={getNextMonthLink()}>
 					<Button className='p-button-info p-button-outlined'>
 						{/* Następny miesiąc */}
-						<i className='pi pi-chevron-right' style={{ fontSize: '1rem' }}></i>
+						<i className='pi pi-chevron-right' style={{ fontSize: "1rem" }}></i>
 					</Button>
 				</Link>
 				<InputSwitch color='red' checked={showAll} onChange={onToggle} />
@@ -528,18 +522,16 @@ const MonthReport: NextPage<Props> = ({
 				<div>Godziny przepracowane: {workedHours}</div>
 				<div
 					className={classNames({
-						'text-red-600': workedHours < hoursToWork,
-						'text-green-600': workedHours > hoursToWork
-					})}
-				>
+						"text-red-600": workedHours < hoursToWork,
+						"text-green-600": workedHours > hoursToWork,
+					})}>
 					<strong>Bilans miesięczny: {workedHours - hoursToWork}</strong>
 				</div>
 				<div
 					className={classNames({
-						'text-red-600': totalBalance < 0,
-						'text-green-600': totalBalance > 0
-					})}
-				>
+						"text-red-600": totalBalance < 0,
+						"text-green-600": totalBalance > 0,
+					})}>
 					<strong>Bilans całkowity: {totalBalance}</strong>
 				</div>
 			</div>
@@ -555,8 +547,7 @@ const MonthReport: NextPage<Props> = ({
 				value={finalData}
 				responsiveLayout='scroll'
 				scrollable
-				tableStyle={{ tableLayout: 'auto' }}
-			>
+				tableStyle={{ tableLayout: "auto" }}>
 				<Column
 					field='messageAt'
 					header='Data'
@@ -568,7 +559,7 @@ const MonthReport: NextPage<Props> = ({
 					field='hours'
 					header='Czas'
 					body={(report: NiceReport) =>
-						report.hours + 'h' + (report.isPto ? ' URLOP' : '')
+						report.hours + "h" + (report.isPto ? " URLOP" : "")
 					}
 				/>
 				<Column

@@ -10,13 +10,15 @@ const getDaysForMonth = (month: string, year: string) => {
 		.tz(process.env.TIMEZONE)
 		.set("month", parseInt(month))
 		.set("year", parseInt(year))
-		.startOf("month");
+		.startOf("month")
+		.add(6, "hours");
 
 	const endDate = dayjs()
 		.tz(process.env.TIMEZONE)
 		.set("month", parseInt(month))
 		.set("year", parseInt(year))
-		.endOf("month");
+		.endOf("month")
+		.subtract(6, "hours");
 
 	const daysRange = Array.from(new Set(range(1, endDate.get("date") + 1)));
 
