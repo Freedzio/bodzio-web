@@ -1,31 +1,31 @@
-import { DayDurations } from '@prisma/client';
-import Holidays from 'date-holidays';
-import { Dayjs } from 'dayjs';
-import { range } from 'lodash';
-import { dayjs } from '../../../common/dayjs';
-import { workdayHours } from '../../[username]/[month]/[year]';
+import { DayDurations } from "@prisma/client";
+import Holidays from "date-holidays";
+import { Dayjs } from "dayjs";
+import { range } from "lodash";
+import { dayjs } from "../../../common/dayjs";
+import { workdayHours } from "../../[username]/[month]/[year]";
 
 const getDaysForMonth = (month: string, year: string) => {
 	const startDate = dayjs()
 		.tz(process.env.TIMEZONE)
-		.set('month', parseInt(month))
-		.set('year', parseInt(year))
-		.startOf('month');
+		.set("month", parseInt(month))
+		.set("year", parseInt(year))
+		.startOf("month");
 
 	const endDate = dayjs()
 		.tz(process.env.TIMEZONE)
-		.set('month', parseInt(month))
-		.set('year', parseInt(year))
-		.endOf('month');
+		.set("month", parseInt(month))
+		.set("year", parseInt(year))
+		.endOf("month");
 
-	const daysRange = range(1, endDate.get('date') + 1);
+	const daysRange = Array.from(new Set(range(1, endDate.get("date") + 1)));
 
-	return daysRange.map((n) => startDate.set('date', n));
+	return daysRange.map((n) => startDate.set("date", n));
 };
 
 export const isHolidayOrOff = (date: Dayjs) => {
 	const hd = new Holidays();
-	hd.init('PL');
+	hd.init("PL");
 
 	return (
 		!!hd.isHoliday(date.toString()) || date.day() === 0 || date.day() === 6
@@ -57,8 +57,8 @@ export const getHoursToWorkForDays = (
 			// który jest przed lub tego samego dnia, co ten dzień
 			const firstDayDurationBeforeDay = dayDurations.find(
 				(dd) =>
-					dayjs(dd.fromDate).startOf('day').valueOf() <=
-					day.startOf('day').valueOf()
+					dayjs(dd.fromDate).startOf("day").valueOf() <=
+					day.startOf("day").valueOf()
 			);
 
 			return firstDayDurationBeforeDay?.duration ?? workdayHours;
