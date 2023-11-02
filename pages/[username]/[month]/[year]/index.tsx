@@ -239,7 +239,7 @@ const getUniqueDates = (reports: NiceReport[]) => [
 ];
 
 const countHours = (reports: NiceReport[]) =>
-	reports.reduce((prev, curr) => prev + curr.hours, 0);
+	parseFloat(reports.reduce((prev, curr) => prev + curr.hours, 0).toFixed(2));
 
 const rowClass = (report: NiceReport) => {
 	return {

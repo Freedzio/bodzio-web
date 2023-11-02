@@ -48,22 +48,25 @@ export const getHoursToWorkForDays = (
 	days: Dayjs[],
 	dayDurations: DayDurations[]
 ) => {
-	return days
-		.map((day) => {
-			// nie ma ustawionych godzin pracy -> domyślna wartość
-			if (dayDurations.length === 0) {
-				return workdayHours;
-			}
+	return parseFloat(
+		days
+			.map((day) => {
+				// nie ma ustawionych godzin pracy -> domyślna wartość
+				if (dayDurations.length === 0) {
+					return workdayHours;
+				}
 
-			// znajdź pierwszy ustawiony dzień pracy
-			// który jest przed lub tego samego dnia, co ten dzień
-			const firstDayDurationBeforeDay = dayDurations.find(
-				(dd) =>
-					dayjs(dd.fromDate).startOf("day").valueOf() <=
-					day.startOf("day").valueOf()
-			);
+				// znajdź pierwszy ustawiony dzień pracy
+				// który jest przed lub tego samego dnia, co ten dzień
+				const firstDayDurationBeforeDay = dayDurations.find(
+					(dd) =>
+						dayjs(dd.fromDate).startOf("day").valueOf() <=
+						day.startOf("day").valueOf()
+				);
 
-			return firstDayDurationBeforeDay?.duration ?? workdayHours;
-		})
-		.reduce((prev, curr) => prev + curr, 0);
+				return firstDayDurationBeforeDay?.duration ?? workdayHours;
+			})
+			.reduce((prev, curr) => prev + curr, 0)
+			.toFixed(2)
+	);
 };
