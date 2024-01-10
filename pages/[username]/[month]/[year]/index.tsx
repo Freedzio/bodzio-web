@@ -73,18 +73,18 @@ const isVideo = (url: string) =>
 export const workdayHours = 6;
 
 const monthOptions = [
-	"styczeń",
-	"luty",
-	"marzec",
-	"kwiecień",
-	"maj",
-	"czerwiec",
-	"lipiec",
-	"sierpień",
-	"wrzesień",
-	"październik",
-	"listopad",
-	"grudzień",
+	"january",
+	"february",
+	"march",
+	"april",
+	"may",
+	"june",
+	"july",
+	"august",
+	"september",
+	"october",
+	"november",
+	"december",
 ];
 
 export const getServerSideProps = async ({
@@ -250,13 +250,13 @@ const rowClass = (report: NiceReport) => {
 
 const weekDays = [
 	// '',
-	"Niedziela",
-	"Poniedziałek",
-	"Wtorek",
-	"Środa",
-	"Czwartek",
-	"Piątek",
-	"Sobota",
+	"Sunday",
+	"Monday",
+	"Tuesday",
+	"Wednesday",
+	"Thursday",
+	"Friday",
+	"Saturday",
 ];
 
 const dateBodyTemplate = (report: NiceReport) => {
@@ -265,12 +265,12 @@ const dateBodyTemplate = (report: NiceReport) => {
 };
 
 const jobBodyTemplate = (report: NiceReport) => {
-	if (report.job === "---BRAK---") {
+	if (report.job === "---NONE---") {
 		return report.job;
 	}
 
 	if (report.isSecret) {
-		return "Prezesowane";
+		return "CEO'd";
 	}
 
 	const linkTagTemplate = (match: string) => {
@@ -296,7 +296,11 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 		<div className='flex flex-wrap gap-1'>
 			{report.attachments.map((a) =>
 				isImage(a.url) ? (
-					<a href={a.url} target='_blank' rel='noreferrer' key={a.url}>
+					<a
+						href={a.url}
+						target='_blank'
+						rel='noreferrer'
+						key={a.url}>
 						<img
 							src={a.url}
 							style={{ maxWidth: "200px", maxHeight: "200px" }}
@@ -310,7 +314,10 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 						<source src={a.url} />
 					</video>
 				) : (
-					<a href={a.url} className='text-blue-500 w-full' key={a.url}>
+					<a
+						href={a.url}
+						className='text-blue-500 w-full'
+						key={a.url}>
 						{a.name}
 					</a>
 				)
@@ -321,7 +328,9 @@ const attachmentsBodyTemplate = (report: NiceReport) => {
 
 const discordLinkBodyTemplate = (report: NiceReport) => {
 	return !!report.link ? (
-		<a href={report.link} className='text-blue-500'>
+		<a
+			href={report.link}
+			className='text-blue-500'>
 			DISCORD
 		</a>
 	) : null;
@@ -359,7 +368,11 @@ const MonthReport: NextPage<Props> = ({
 
 		return (
 			<>
-				<Tooltip target='.header' mouseTrack mouseTrackLeft={10} />
+				<Tooltip
+					target='.header'
+					mouseTrack
+					mouseTrackLeft={10}
+				/>
 				<div
 					className='header'
 					style={{ width: "80vw" }}
@@ -384,8 +397,11 @@ const MonthReport: NextPage<Props> = ({
 		return (
 			<td colSpan={3}>
 				<span>
-					W sumie <strong>{workedHours}</strong> na{" "}
-					<strong>{hoursToWork}</strong> godzin - bilans{" "}
+					In total -{" "}
+					<strong>
+						{workedHours} \ {hoursToWork}
+					</strong>{" "}
+					hours
 					<strong>
 						<span
 							className={classNames({
@@ -460,10 +476,10 @@ const MonthReport: NextPage<Props> = ({
 			<div
 				className='flex flex-column justify-content-center align-items-center'
 				style={{ height: "100vh" }}>
-				<h3>Ojojoj, wygląda na to że nie mogę Cię tutaj wpuścić...</h3>
-				<Button onClick={() => signOut()}>Wyloguj się</Button>
+				<h3>Well well well, it seems I cannot let you in...</h3>
+				<Button onClick={() => signOut()}>Sign out</Button>
 				<br />
-				<h4>Na pocieszenie masz tutaj zdjęcie pieska</h4>
+				<h4>Here, have a puppy</h4>
 				<img
 					src='https://www.dierapotheker.be/media/image/95/37/34/pup-gezondheidscontrole-2.png'
 					style={{ maxWidth: "300px" }}
@@ -477,7 +493,7 @@ const MonthReport: NextPage<Props> = ({
 			<div
 				className='flex flex-column justify-content-center align-items-center'
 				style={{ height: "80vh" }}>
-				<h3>Trwa bodziowanie...</h3>
+				<h3>Loading...</h3>
 				<ProgressSpinner
 					style={{ width: "100px", height: "100px" }}
 					strokeWidth='8'
@@ -492,8 +508,10 @@ const MonthReport: NextPage<Props> = ({
 
 	return (
 		<div className='px-8 pb-8'>
-			<div className='pt-5' style={{ fontSize: "26px" }}>
-				Raport <strong>{username}</strong> za okres{" "}
+			<div
+				className='pt-5'
+				style={{ fontSize: "26px" }}>
+				<strong>{username}</strong>'s report for{" "}
 				<strong>
 					{monthOptions[parseInt(month)]} {year}
 				</strong>
@@ -501,38 +519,46 @@ const MonthReport: NextPage<Props> = ({
 			<div className='gap-2 flex align-items-center mt-3 noprint'>
 				<Link href={getPrevMonthLink()}>
 					<Button className='p-button-info p-button-outlined'>
-						<i className='pi pi-chevron-left' style={{ fontSize: "1rem" }}></i>
+						<i
+							className='pi pi-chevron-left'
+							style={{ fontSize: "1rem" }}></i>
 						{/* Poprzedni miesiąc */}
 					</Button>
 				</Link>
 				<Link href={getNextMonthLink()}>
 					<Button className='p-button-info p-button-outlined'>
 						{/* Następny miesiąc */}
-						<i className='pi pi-chevron-right' style={{ fontSize: "1rem" }}></i>
+						<i
+							className='pi pi-chevron-right'
+							style={{ fontSize: "1rem" }}></i>
 					</Button>
 				</Link>
-				<InputSwitch color='red' checked={showAll} onChange={onToggle} />
-				<span>Pokaż przyszłe dni</span>
+				<InputSwitch
+					color='red'
+					checked={showAll}
+					onChange={onToggle}
+				/>
+				<span>Show future days</span>
 			</div>
 			<div className='my-5 p-2 highlight'>
 				<div>
-					<strong>Podsumowanie miesiąca</strong>
+					<strong>Month summary</strong>
 				</div>
-				<div>Godziny do przepracowania: {hoursToWork}</div>
-				<div>Godziny przepracowane: {workedHours}</div>
+				<div>Hours to work: {hoursToWork}</div>
+				<div>Hours worked: {workedHours}</div>
 				<div
 					className={classNames({
 						"text-red-600": workedHours < hoursToWork,
 						"text-green-600": workedHours > hoursToWork,
 					})}>
-					<strong>Bilans miesięczny: {workedHours - hoursToWork}</strong>
+					<strong>Monthly balance: {workedHours - hoursToWork}</strong>
 				</div>
 				<div
 					className={classNames({
 						"text-red-600": totalBalance < 0,
 						"text-green-600": totalBalance > 0,
 					})}>
-					<strong>Bilans całkowity: {totalBalance}</strong>
+					<strong>Total balace: {totalBalance}</strong>
 				</div>
 			</div>
 			<DataTable
@@ -550,14 +576,18 @@ const MonthReport: NextPage<Props> = ({
 				tableStyle={{ tableLayout: "auto" }}>
 				<Column
 					field='messageAt'
-					header='Data'
+					header='Date'
 					body={dateBodyTemplate}
 					sortable
 				/>
-				<Column field='job' body={jobBodyTemplate} header='Zakres' />
+				<Column
+					field='job'
+					body={jobBodyTemplate}
+					header='Job'
+				/>
 				<Column
 					field='hours'
-					header='Czas'
+					header='Time'
 					body={(report: NiceReport) =>
 						report.hours + "h" + (report.isPto ? " URLOP" : "")
 					}
@@ -565,7 +595,7 @@ const MonthReport: NextPage<Props> = ({
 				<Column
 					field='job'
 					body={attachmentsBodyTemplate}
-					header='Załączniki'
+					header='Attachments'
 				/>
 				<Column
 					className='noprint'
