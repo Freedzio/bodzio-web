@@ -511,7 +511,8 @@ const MonthReport: NextPage<Props> = ({
 			<div
 				className='pt-5'
 				style={{ fontSize: "26px" }}>
-				<strong>{username}</strong>'s report for{" "}
+				<strong>{username}</strong>
+				{"'"}s report for{" "}
 				<strong>
 					{monthOptions[parseInt(month)]} {year}
 				</strong>
